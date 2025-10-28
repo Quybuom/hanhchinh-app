@@ -1,125 +1,105 @@
-# Vietnamese Government Feedback Management System
+# Hệ thống Quản lý Phản ánh
+## Vietnamese Feedback Management System
+
+A professional administrative feedback tracking system for Trung tâm Phục vụ hành chính công tỉnh Bắc Ninh.
 
 ## Overview
+This application enables government departments to submit, track, and manage feedback, issues, and suggestions. It features AI-powered notification generation using Google Gemini and secure admin authentication.
 
-This is a feedback management system built for the Bắc Ninh Provincial Administrative Service Center in Vietnam. The application allows government units to submit feedback, issues, and suggestions, which can then be tracked, assigned, and resolved by administrators. The system uses AI (Google Gemini) to generate automated notification messages in Vietnamese when new feedback is received.
+## Key Features
+- **Public Feedback Submission**: Anyone can submit feedback with department name, title, description, and optional images
+- **Admin Dashboard**: Secure admin access to view reports, update status, and assign feedback to staff
+- **AI Notifications**: Gemini AI generates contextual Vietnamese notification messages
+- **Status Tracking**: Three-stage workflow (Received → Processing → Resolved)
+- **Staff Assignment**: Assign feedback to specific team members
+- **Statistics & Reporting**: Real-time statistics and comprehensive reporting
 
-**Core Features:**
-- Public feedback submission with Vietnamese language support
-- Admin authentication for managing feedback
-- Status tracking (Received, Processing, Resolved)
-- Assignment system for distributing work
-- Real-time statistics dashboard
-- AI-generated notification messages using Google Gemini
-- Material Design-influenced UI with shadcn/ui components
+## Technical Stack
+- **Frontend**: React 19, TypeScript, TanStack Query, Wouter, Shadcn UI
+- **Backend**: Express.js, TypeScript, In-memory storage
+- **AI**: Google Gemini 2.5 Flash for notification generation
+- **Styling**: Tailwind CSS with custom design system
 
-## User Preferences
+## Environment Variables
+Required secrets (configured in Replit Secrets):
+- `GEMINI_API_KEY`: Google Gemini API key for AI notifications
+- `ADMIN_PASSWORD`: Secure password for admin authentication
 
-Preferred communication style: Simple, everyday language.
+## Running the Application
+The application runs automatically via the "Start application" workflow which executes `npm run dev`. The server runs on port 5000.
 
-## System Architecture
+## User Guide
 
-### Frontend Architecture
+### Submitting Feedback
+1. Click "Gửi phản ánh" button in the header
+2. Fill in the form:
+   - Tên đơn vị (Department name)
+   - Tiêu đề (Title)
+   - Mô tả chi tiết (Detailed description)
+   - Link hình ảnh (Image URL - optional)
+3. Click "Gửi phản ánh" to submit
+4. Receive AI-generated confirmation message
 
-**Framework:** React 19 with TypeScript and Vite as the build tool
+### Admin Features
+1. Click the login icon in the header
+2. Enter the admin password (configured in ADMIN_PASSWORD secret)
+3. Once authenticated, you can:
+   - View comprehensive reports
+   - Update feedback status (Received → Processing → Resolved)
+   - Assign feedback to team members
+   - View detailed statistics
 
-**UI Component System:** shadcn/ui (Radix UI primitives) with Tailwind CSS
-- Design system based on Material Design principles
-- Custom color scheme with HSL color variables for theming
-- Responsive layouts using Tailwind's grid and flexbox utilities
-- Component library includes dialogs, forms, cards, badges, toasts, and more
+### Available Staff Members
+- Nguyễn Văn An
+- Trần Thị Bình
+- Lê Hoàng Cường
+- Phạm Thị Dung
+- Võ Minh Long
 
-**State Management:**
-- TanStack Query (React Query) for server state management
-- React hooks for local component state
-- No global state management library (Redux, Zustand, etc.)
+## Architecture
 
-**Routing:** Wouter for client-side routing (lightweight alternative to React Router)
-
-**Form Handling:** React Hook Form with Zod schema validation
-
-**Styling Approach:**
-- Tailwind CSS utility-first styling
-- Custom CSS variables for consistent theming
-- Inter font family from Google Fonts
-- Responsive breakpoints (mobile-first)
-
-### Backend Architecture
-
-**Server Framework:** Express.js with TypeScript
-
-**API Design:** RESTful API with the following endpoints:
-- `POST /api/admin/login` - Admin authentication
-- `GET /api/feedbacks` - Retrieve all feedback items
-- `GET /api/feedbacks/:id` - Retrieve single feedback
-- `POST /api/feedbacks` - Create new feedback
-- `PATCH /api/feedbacks/:id/status` - Update feedback status
-- `PATCH /api/feedbacks/:id/assign` - Assign feedback to user
-
-**Data Layer:**
-- Drizzle ORM for database operations
-- PostgreSQL database (configured via `@neondatabase/serverless`)
-- In-memory storage fallback (`MemStorage` class) for development
-- Schema defined with Drizzle's pgTable
-
-**Session Management:** 
-- `connect-pg-simple` for PostgreSQL-backed sessions
-- Session storage configuration present but authentication uses simple password verification
-
-**Development Setup:**
-- Vite middleware integration for hot module replacement
-- Development and production build configurations
-- ESBuild for server-side bundling
-
-### Data Storage
-
-**Database:** PostgreSQL via Neon serverless driver
-
-**Schema Structure:**
+### Data Model
 ```typescript
-feedbacks table:
-- id (varchar, primary key, auto-generated UUID)
-- unitName (text) - Name of submitting government unit
-- title (text) - Feedback title
-- description (text) - Detailed feedback description
-- imageUrl (text, nullable) - Optional image attachment
-- submittedAt (timestamp) - Submission timestamp
-- status (text) - Current status: received/processing/resolved
-- assignee (text, nullable) - Assigned staff member
+interface Feedback {
+  id: string;
+  unitName: string;
+  title: string;
+  description: string;
+  imageUrl: string | null;
+  submittedAt: Date;
+  status: "received" | "processing" | "resolved";
+  assignee: string | null;
+}
 ```
 
-**ORM Features:**
-- Drizzle Kit for migrations (migrations stored in `/migrations`)
-- Type-safe query building
-- Zod schema validation integration via `drizzle-zod`
+### API Endpoints
+- `GET /api/feedbacks` - List all feedback
+- `POST /api/feedbacks` - Create new feedback
+- `PATCH /api/feedbacks/:id/status` - Update status
+- `PATCH /api/feedbacks/:id/assign` - Assign to staff
+- `POST /api/admin/login` - Admin authentication
 
-### External Dependencies
+## Design
+The application follows a professional Vietnamese government aesthetic with:
+- Blue primary color scheme (#3b82f6)
+- Clean, accessible typography using Inter font
+- Responsive design for mobile and desktop
+- Professional card-based layout
+- Subtle shadows and smooth transitions
 
-**Google Gemini AI Integration:**
-- Package: `@google/genai` (v1.27.0)
-- Model: `gemini-2.5-flash`
-- Purpose: Generate professional Vietnamese notification messages when feedback is submitted
-- Configuration: Requires `GEMINI_API_KEY` environment variable
-- Service location: `server/services/gemini.ts`
+## Recent Changes
+- October 28, 2025: Initial deployment
+  - Complete feedback management system
+  - AI-powered notifications with Gemini
+  - Secure server-side authentication
+  - Empty initial state (production-ready)
+  - Vietnamese language UI throughout
 
-**Authentication:**
-- Simple password-based admin authentication
-- Password stored in `ADMIN_PASSWORD` environment variable
-- No JWT or session tokens - basic verification only
-- Service location: `server/services/auth.ts`
+## Next Steps
+To deploy this application live on Replit:
+1. Ensure both secrets are configured (GEMINI_API_KEY and ADMIN_PASSWORD)
+2. Click the "Publish" button to make it accessible via a public URL
+3. Share the URL with department staff
 
-**Database Connection:**
-- Neon PostgreSQL serverless database
-- Connection string via `DATABASE_URL` environment variable
-- Drizzle ORM handles connection pooling
-
-**UI Component Libraries:**
-- Multiple Radix UI primitives (@radix-ui/react-*)
-- date-fns for date formatting with Vietnamese locale support
-- Lucide React for icons
-- cmdk for command palette functionality
-
-**Development Tools:**
-- Vite plugins for Replit integration (@replit/vite-plugin-*)
-- TypeScript for type safety
-- PostCSS with Tailwind and Autoprefixer
+## Support
+For questions or issues, contact the Replit support team or review the code documentation.
