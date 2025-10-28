@@ -46,7 +46,7 @@ export default function AddFeedbackModal({
       unitName: "",
       title: "",
       description: "",
-      imageUrl: "",
+      imageUrl: null,
       contactName: "",
       contactPhone: "",
     },
@@ -97,7 +97,7 @@ export default function AddFeedbackModal({
   const handleRemoveImage = () => {
     setSelectedFile(null);
     setUploadedImageUrl(null);
-    form.setValue("imageUrl", "");
+    form.setValue("imageUrl", null);
   };
 
   const handleSubmit = async (data: InsertFeedback) => {
