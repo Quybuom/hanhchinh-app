@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/select";
 import { formatDistanceToNow } from "date-fns";
 import { vi } from "date-fns/locale";
-import { Building2, Calendar, User, Trash2, Edit } from "lucide-react";
+import { Building2, Calendar, User, Trash2, Edit, Hash } from "lucide-react";
 import type { Feedback } from "@shared/schema";
 import { Status, STATUS_OPTIONS } from "@shared/schema";
 import AssigneeInput from "./AssigneeInput";
@@ -73,9 +73,15 @@ export default function FeedbackCard({
     <Card className={`hover-elevate transition-all ${getStatusCardClass(feedbackStatus)}`} data-testid={`feedback-card-${feedback.id}`}>
       <CardHeader className="pb-3">
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <Building2 className="w-4 h-4" />
-            <span data-testid={`feedback-unit-${feedback.id}`}>{feedback.unitName}</span>
+          <div className="flex items-center gap-3">
+            <Badge variant="outline" className="gap-1 font-mono" data-testid={`feedback-tracking-${feedback.id}`}>
+              <Hash className="w-3 h-3" />
+              {feedback.trackingNumber}
+            </Badge>
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Building2 className="w-4 h-4" />
+              <span data-testid={`feedback-unit-${feedback.id}`}>{feedback.unitName}</span>
+            </div>
           </div>
           <div className="flex items-center gap-2 text-xs text-muted-foreground">
             <Calendar className="w-3.5 h-3.5" />
