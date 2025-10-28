@@ -11,8 +11,16 @@ This application enables government departments to submit, track, and manage fee
 - **Admin Dashboard**: Secure admin access to view reports, update status, and assign feedback to staff
 - **AI Notifications**: Gemini AI generates contextual Vietnamese notification messages
 - **Status Tracking**: Three-stage workflow (Received → Processing → Resolved)
-- **Staff Assignment**: Assign feedback to specific team members
-- **Statistics & Reporting**: Real-time statistics and comprehensive reporting
+- **Flexible Staff Assignment**: 
+  - Assign feedback to anyone (not limited to predefined list)
+  - Search and filter from existing assignees
+  - Type custom assignee names
+  - Assignee information visible to all users
+- **Enhanced Statistics & Reporting**: 
+  - Real-time statistics with percentage breakdowns
+  - Assignee workload tracking
+  - Resolution rates per assignee
+  - Comprehensive data exports
 
 ## Technical Stack
 - **Frontend**: React 19, TypeScript, TanStack Query, Wouter, Shadcn UI
@@ -56,17 +64,26 @@ The application runs automatically via the "Start application" workflow which ex
 1. Click the login icon in the header
 2. Enter the admin password (configured in ADMIN_PASSWORD secret)
 3. Once authenticated, you can:
-   - View comprehensive reports
-   - Update feedback status (Received → Processing → Resolved)
-   - Assign feedback to team members
-   - View detailed statistics
+   - **View comprehensive reports** with percentages for each status
+   - **Update feedback status** (Received → Processing → Resolved)
+   - **Assign feedback** to team members or type new names
+   - **View detailed statistics** including:
+     - Status breakdown with percentages
+     - Assignee workload (number of feedback items per person)
+     - Resolution rates per assignee
+   - **Export data** in CSV format or text reports
 
-### Available Staff Members
-- Nguyễn Văn An
-- Trần Thị Bình
-- Lê Hoàng Cường
-- Phạm Thị Dung
-- Võ Minh Long
+### Staff Assignment
+Admin can assign feedback to any staff member:
+- **Suggested Assignees** (quick selection):
+  - Nguyễn Văn An
+  - Trần Thị Bình
+  - Lê Hoàng Cường
+  - Phạm Thị Dung
+  - Võ Minh Long
+- **Custom Names**: Type any new name to add assignee on the fly
+- **Searchable**: Filter through existing assignees
+- **Visible to All**: Everyone can see who is assigned to each feedback
 
 ## Architecture
 
