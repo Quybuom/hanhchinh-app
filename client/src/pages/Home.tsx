@@ -7,6 +7,7 @@ import Header from "@/components/Header";
 import ReportSummary from "@/components/ReportSummary";
 import FeedbackList from "@/components/FeedbackList";
 import AddFeedbackModal from "@/components/AddFeedbackModal";
+import EditFeedbackModal from "@/components/EditFeedbackModal";
 import ReportModal from "@/components/ReportModal";
 import Toast from "@/components/Toast";
 import AdminAuthModal from "@/components/AdminAuthModal";
@@ -14,6 +15,8 @@ import { Loader2 } from "lucide-react";
 
 export default function Home() {
   const [isAddModalOpen, setAddModalOpen] = useState(false);
+  const [isEditModalOpen, setEditModalOpen] = useState(false);
+  const [selectedFeedback, setSelectedFeedback] = useState<Feedback | null>(null);
   const [isReportModalOpen, setReportModalOpen] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [isAdminMode, setAdminMode] = useState(false);
@@ -58,6 +61,32 @@ export default function Home() {
     },
   });
 
+  const updateFeedbackMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: string; data: Partial<InsertFeedback> }) => {
+      return await apiRequest("PATCH", `/api/feedbacks/${id}`, data);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/feedbacks"] });
+      setToastMessage("Phản ánh đã được cập nhật");
+    },
+    onError: () => {
+      setToastMessage("Lỗi khi cập nhật phản ánh");
+    },
+  });
+
+  const deleteFeedbackMutation = useMutation({
+    mutationFn: async (id: string) => {
+      return await apiRequest("DELETE", `/api/feedbacks/${id}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/feedbacks"] });
+      setToastMessage("Phản ánh đã được xóa");
+    },
+    onError: () => {
+      setToastMessage("Lỗi khi xóa phản ánh");
+    },
+  });
+
   const handleAddFeedback = useCallback(
     async (data: Omit<InsertFeedback, 'status' | 'assignee'>) => {
       await addFeedbackMutation.mutateAsync(data);
@@ -77,6 +106,30 @@ export default function Home() {
       assignMutation.mutate({ id, assignee: assignee || null });
     },
     [assignMutation]
+  );
+
+  const handleEditFeedback = useCallback(
+    (feedback: Feedback) => {
+      setSelectedFeedback(feedback);
+      setEditModalOpen(true);
+    },
+    []
+  );
+
+  const handleUpdateFeedback = useCallback(
+    async (id: string, data: Partial<InsertFeedback>) => {
+      await updateFeedbackMutation.mutateAsync({ id, data });
+    },
+    [updateFeedbackMutation]
+  );
+
+  const handleDeleteFeedback = useCallback(
+    (id: string) => {
+      if (confirm("Bạn có chắc chắn muốn xóa phản ánh này?")) {
+        deleteFeedbackMutation.mutate(id);
+      }
+    },
+    [deleteFeedbackMutation]
   );
 
   const handleAuthenticate = async (password: string): Promise<boolean> => {
@@ -126,6 +179,8 @@ export default function Home() {
           feedbackItems={feedbackItems}
           onUpdateStatus={handleUpdateStatus}
           onAssign={handleAssign}
+          onEdit={handleEditFeedback}
+          onDelete={handleDeleteFeedback}
           isAdminMode={isAdminMode}
         />
       </main>
@@ -138,6 +193,16 @@ export default function Home() {
         isOpen={isAddModalOpen}
         onClose={() => setAddModalOpen(false)}
         onAddFeedback={handleAddFeedback}
+      />
+
+      <EditFeedbackModal
+        isOpen={isEditModalOpen}
+        onClose={() => {
+          setEditModalOpen(false);
+          setSelectedFeedback(null);
+        }}
+        feedback={selectedFeedback}
+        onUpdateFeedback={handleUpdateFeedback}
       />
 
       {isAdminMode && (

@@ -7,6 +7,8 @@ interface FeedbackListProps {
   feedbackItems: Feedback[];
   onUpdateStatus: (id: string, status: Status) => void;
   onAssign: (id: string, assignee: string) => void;
+  onEdit?: (feedback: Feedback) => void;
+  onDelete?: (id: string) => void;
   isAdminMode: boolean;
 }
 
@@ -14,6 +16,8 @@ export default function FeedbackList({
   feedbackItems,
   onUpdateStatus,
   onAssign,
+  onEdit,
+  onDelete,
   isAdminMode,
 }: FeedbackListProps) {
   if (feedbackItems.length === 0) {
@@ -40,6 +44,8 @@ export default function FeedbackList({
           feedback={feedback}
           onUpdateStatus={onUpdateStatus}
           onAssign={onAssign}
+          onEdit={onEdit}
+          onDelete={onDelete}
           isAdminMode={isAdminMode}
         />
       ))}
