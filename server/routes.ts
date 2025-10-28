@@ -7,8 +7,54 @@ import { fromZodError } from "zod-validation-error";
 import { generateTelegramNotification } from "./services/gemini";
 import { sendTelegramNotification, sendStatusUpdateNotification } from "./services/telegram";
 import { verifyAdminPassword } from "./services/auth";
+import { upload, getFileUrl } from "./upload";
+import path from "path";
+import multer from "multer";
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Serve uploaded files using express.static for security
+  const uploadsDir = path.join(process.cwd(), "uploads");
+  app.use("/uploads", (req, res, next) => {
+    // Prevent path traversal attacks by validating the requested path
+    // Remove leading slashes and normalize to prevent directory traversal
+    const requestedPath = path.normalize(req.path).replace(/^\/+/, '').replace(/^(\.\.[\/\\])+/, '');
+    const safePath = path.join(uploadsDir, requestedPath);
+    
+    // Ensure the resolved path is still within the uploads directory
+    if (!safePath.startsWith(uploadsDir)) {
+      return res.status(403).json({ error: "Access denied" });
+    }
+    
+    res.sendFile(safePath, (err) => {
+      if (err) {
+        res.status(404).json({ error: "File not found" });
+      }
+    });
+  });
+
+  // File upload endpoint
+  app.post("/api/upload", (req, res) => {
+    upload.single("image")(req, res, (err: any) => {
+      if (err) {
+        if (err instanceof multer.MulterError) {
+          if (err.code === "LIMIT_FILE_SIZE") {
+            return res.status(400).json({ error: "Kích thước file không được vượt quá 5MB" });
+          }
+          return res.status(400).json({ error: "Lỗi khi tải file lên" });
+        }
+        // File filter error (invalid file type)
+        return res.status(400).json({ error: err.message || "Chỉ chấp nhận file ảnh" });
+      }
+
+      if (!req.file) {
+        return res.status(400).json({ error: "Không có file nào được tải lên" });
+      }
+
+      const fileUrl = getFileUrl(req.file.filename);
+      res.json({ url: fileUrl });
+    });
+  });
+
   // Admin authentication
   app.post("/api/admin/login", async (req, res) => {
     try {
