@@ -8,15 +8,17 @@ This application enables government departments to submit, track, and manage fee
 
 ## Key Features
 - **Public Feedback Submission**: Anyone can submit feedback with department name, title, description, contact information (name and phone), and optional images
+- **Tracking Number System**: Each feedback receives a unique sequential tracking number (#1, #2, #3...) for easy reference
 - **Contact Information Collection**: Required contact name and phone number (10-11 digits) for all new feedback submissions
 - **Admin Dashboard**: Secure admin access to view reports, update status, and assign feedback to staff
-- **AI Notifications**: Gemini AI generates contextual Vietnamese notification messages
+- **AI Notifications**: Gemini AI generates contextual Vietnamese notification messages with tracking numbers
 - **Status Tracking**: Three-stage workflow (Received → Processing → Resolved)
 - **Flexible Staff Assignment**: 
   - Assign feedback to anyone (not limited to predefined list)
   - Search and filter from existing assignees
   - Type custom assignee names
   - Assignee information visible to all users
+  - Telegram notifications when assignee is assigned
 - **Enhanced Statistics & Reporting**: 
   - Real-time statistics with percentage breakdowns
   - Assignee workload tracking
@@ -52,8 +54,8 @@ The application runs automatically via the "Start application" workflow which ex
 ## User Guide
 
 ### Submitting Feedback
-1. Click "Gửi phản ánh" button in the header
-2. Fill in the form:
+1. Click "GỬI YÊU CẦU HỖ TRỢ" button in the header
+2. Fill in the form in the scrollable modal:
    - Tên đơn vị (Department name)
    - **Thông tin liên hệ** (Contact Information):
      - Họ và tên (Full name - required)
@@ -61,8 +63,8 @@ The application runs automatically via the "Start application" workflow which ex
    - Tiêu đề (Title)
    - Mô tả chi tiết (Detailed description)
    - Hình ảnh (Image upload - optional, max 5MB)
-3. Click "Gửi phản ánh" to submit
-4. Receive AI-generated confirmation message
+3. Click "GỬI YÊU CẦU HỖ TRỢ" to submit
+4. Receive a unique tracking number and AI-generated confirmation message
 
 ### Admin Features
 1. Click the login icon in the header
@@ -95,6 +97,7 @@ Admin can assign feedback to any staff member:
 ```typescript
 interface Feedback {
   id: string;
+  trackingNumber: number; // Auto-incremented serial, unique
   unitName: string;
   title: string;
   description: string;
@@ -127,7 +130,25 @@ The application follows a professional Vietnamese government aesthetic with:
 - Subtle shadows and smooth transitions
 
 ## Recent Changes
-- October 28, 2025 (Latest): Enhanced UI/UX with color-coded status cards and edit/delete functionality
+- October 28, 2025 (Latest): UI improvements and tracking number system
+  - **Tracking Number System**: Added auto-incrementing tracking numbers (#1, #2, #3...)
+    - Database column: `tracking_number` (serial, unique, not null)
+    - Displayed as Badge with Hash icon and font-mono style on all feedback cards
+    - Included in all Telegram notifications for easy reference
+  - **UI Text Updates**: Renamed all "Gửi phản ánh" to "GỬI YÊU CẦU HỖ TRỢ"
+    - Header button, modal title, submit button all updated
+    - Modal title changed from "Gửi phản ánh mới" to "Gửi yêu cầu hỗ trợ"
+  - **Modal UX Improvements**: Fixed AddFeedbackModal scrollability
+    - Modal content area is now scrollable (max-h-[60vh] overflow-y-auto)
+    - Submit button always visible at bottom in fixed footer
+    - Fixed imageUrl validation bug (changed default from "" to null)
+  - **Enhanced Telegram Notifications**:
+    - New feedback notification ends with "Đã tiếp nhận yêu cầu hỗ trợ chờ phân công xử lý"
+    - Assignee notification: "Số kiến nghị #123 giao cho đồng chí [name] tiếp nhận xử lý"
+    - All notifications include tracking number for easy tracking
+  - **E2E Testing**: Verified all features with automated Playwright tests
+
+- October 28, 2025: Enhanced UI/UX with color-coded status cards and edit/delete functionality
   - **Color-coded Status Cards**: Visual distinction for feedback statuses
     - Blue background for "Đã tiếp nhận" (Received)
     - Amber background for "Đang xử lý" (Processing)
