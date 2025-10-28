@@ -127,6 +127,24 @@ The application follows a professional Vietnamese government aesthetic with:
 - Subtle shadows and smooth transitions
 
 ## Recent Changes
+- October 28, 2025 (Latest): Enhanced UI/UX with color-coded status cards and edit/delete functionality
+  - **Color-coded Status Cards**: Visual distinction for feedback statuses
+    - Blue background for "Đã tiếp nhận" (Received)
+    - Amber background for "Đang xử lý" (Processing)
+    - Green background for "Đã giải quyết" (Resolved)
+  - **Enhanced Information Display**: Clear, structured sender information section
+    - "Người gửi" (Sender) with User icon
+    - "Đơn vị" (Department) with Building icon
+    - "Cán bộ xử lý" (Assignee) with User icon
+  - **Admin Edit & Delete**: Full CRUD operations for administrators
+    - Edit button opens modal with pre-filled data
+    - Delete button with confirmation dialog
+    - Real-time updates with toast notifications
+  - **Backend APIs**: New endpoints for update and delete operations
+    - `PATCH /api/feedbacks/:id` - Update feedback
+    - `DELETE /api/feedbacks/:id` - Delete feedback
+  - **E2E Testing**: Verified visual features with automated tests
+
 - October 28, 2025: System renamed and contact information feature added
   - **System Name Updated**: "HỖ TRỢ NGƯỜI DÙNG HỆ THỐNG GIẢI QUYẾT THỦ TỤC HÀNH CHÍNH TỈNH BẮC NINH"
   - **Contact Information**: Required contact name and phone number for all new feedback submissions
