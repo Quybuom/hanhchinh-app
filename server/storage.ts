@@ -6,8 +6,10 @@ export interface IStorage {
   getAllFeedbacks(): Promise<Feedback[]>;
   getFeedback(id: string): Promise<Feedback | undefined>;
   createFeedback(feedback: InsertFeedback): Promise<Feedback>;
+  updateFeedback(id: string, data: Partial<InsertFeedback>): Promise<Feedback | undefined>;
   updateFeedbackStatus(id: string, status: Status): Promise<Feedback | undefined>;
   assignFeedback(id: string, assignee: string | null): Promise<Feedback | undefined>;
+  deleteFeedback(id: string): Promise<boolean>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -49,6 +51,23 @@ export class DatabaseStorage implements IStorage {
       .where(eq(feedbacks.id, id))
       .returning();
     return feedback || undefined;
+  }
+
+  async updateFeedback(id: string, data: Partial<InsertFeedback>): Promise<Feedback | undefined> {
+    const [feedback] = await db
+      .update(feedbacks)
+      .set(data)
+      .where(eq(feedbacks.id, id))
+      .returning();
+    return feedback || undefined;
+  }
+
+  async deleteFeedback(id: string): Promise<boolean> {
+    const result = await db
+      .delete(feedbacks)
+      .where(eq(feedbacks.id, id))
+      .returning();
+    return result.length > 0;
   }
 }
 

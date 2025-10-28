@@ -206,6 +206,49 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Update feedback
+  app.patch("/api/feedbacks/:id", async (req, res) => {
+    try {
+      const updateSchema = insertFeedbackSchema.partial();
+      const validationResult = updateSchema.safeParse(req.body);
+      
+      if (!validationResult.success) {
+        const error = fromZodError(validationResult.error);
+        return res.status(400).json({ error: error.message });
+      }
+
+      const feedback = await storage.updateFeedback(
+        req.params.id,
+        validationResult.data
+      );
+
+      if (!feedback) {
+        return res.status(404).json({ error: "Feedback not found" });
+      }
+
+      res.json(feedback);
+    } catch (error) {
+      console.error("Error updating feedback:", error);
+      res.status(500).json({ error: "Failed to update feedback" });
+    }
+  });
+
+  // Delete feedback
+  app.delete("/api/feedbacks/:id", async (req, res) => {
+    try {
+      const deleted = await storage.deleteFeedback(req.params.id);
+
+      if (!deleted) {
+        return res.status(404).json({ error: "Feedback not found" });
+      }
+
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting feedback:", error);
+      res.status(500).json({ error: "Failed to delete feedback" });
+    }
+  });
+
   // Export feedbacks as CSV
   app.get("/api/export/csv", async (_req, res) => {
     try {
