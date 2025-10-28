@@ -10,6 +10,7 @@ export interface IStorage {
   updateFeedbackStatus(id: string, status: Status): Promise<Feedback | undefined>;
   assignFeedback(id: string, assignee: string | null): Promise<Feedback | undefined>;
   deleteFeedback(id: string): Promise<boolean>;
+  submitReview(id: string, rating: number, reviewComment: string | undefined, contactPhone: string): Promise<Feedback | undefined>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -45,9 +46,16 @@ export class DatabaseStorage implements IStorage {
   }
 
   async assignFeedback(id: string, assignee: string | null): Promise<Feedback | undefined> {
+    const updateData: { assignee: string | null; status?: Status } = { assignee };
+    
+    // Automatically change status to "processing" when assigning to someone
+    if (assignee !== null) {
+      updateData.status = Status.Processing;
+    }
+    
     const [feedback] = await db
       .update(feedbacks)
-      .set({ assignee })
+      .set(updateData)
       .where(eq(feedbacks.id, id))
       .returning();
     return feedback || undefined;
@@ -68,6 +76,42 @@ export class DatabaseStorage implements IStorage {
       .where(eq(feedbacks.id, id))
       .returning();
     return result.length > 0;
+  }
+
+  async submitReview(id: string, rating: number, reviewComment: string | undefined, contactPhone: string): Promise<Feedback | undefined> {
+    // First, verify the contact phone matches
+    const [existing] = await db.select().from(feedbacks).where(eq(feedbacks.id, id));
+    
+    if (!existing) {
+      return undefined;
+    }
+    
+    // Verify contact phone matches
+    if (existing.contactPhone !== contactPhone) {
+      throw new Error("Contact phone does not match");
+    }
+    
+    // Verify status is resolved
+    if (existing.status !== Status.Resolved) {
+      throw new Error("Can only review resolved feedback");
+    }
+    
+    // Verify rating doesn't already exist (check both null and undefined)
+    if (existing.rating != null) {
+      throw new Error("Feedback already reviewed");
+    }
+    
+    // Update with review
+    const [feedback] = await db
+      .update(feedbacks)
+      .set({ 
+        rating, 
+        reviewComment: reviewComment || null 
+      })
+      .where(eq(feedbacks.id, id))
+      .returning();
+    
+    return feedback || undefined;
   }
 }
 

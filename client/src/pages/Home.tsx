@@ -157,6 +157,10 @@ export default function Home() {
     setAdminMode(false);
   };
 
+  const handleReviewSubmit = useCallback(() => {
+    queryClient.invalidateQueries({ queryKey: ["/api/feedbacks"] });
+  }, []);
+
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
@@ -186,6 +190,7 @@ export default function Home() {
           onAssign={handleAssign}
           onEdit={handleEditFeedback}
           onDelete={handleDeleteFeedback}
+          onReviewSubmit={handleReviewSubmit}
           isAdminMode={isAdminMode}
         />
       </main>

@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertFeedbackSchema, Status } from "@shared/schema";
+import { insertFeedbackSchema, submitReviewSchema, Status } from "@shared/schema";
 import { z } from "zod";
 import { fromZodError } from "zod-validation-error";
 import { generateTelegramNotification } from "./services/gemini";
@@ -256,6 +256,44 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error deleting feedback:", error);
       res.status(500).json({ error: "Failed to delete feedback" });
+    }
+  });
+
+  // Submit review for feedback
+  app.post("/api/feedbacks/:id/review", async (req, res) => {
+    try {
+      const validationResult = submitReviewSchema.safeParse(req.body);
+      if (!validationResult.success) {
+        const error = fromZodError(validationResult.error);
+        return res.status(400).json({ error: error.message });
+      }
+
+      const { rating, reviewComment, contactPhone } = validationResult.data;
+      
+      const feedback = await storage.submitReview(
+        req.params.id,
+        rating,
+        reviewComment,
+        contactPhone
+      );
+
+      if (!feedback) {
+        return res.status(404).json({ error: "Feedback not found" });
+      }
+
+      res.json(feedback);
+    } catch (error: any) {
+      console.error("Error submitting review:", error);
+      if (error.message === "Contact phone does not match") {
+        return res.status(403).json({ error: "Số điện thoại không khớp với người gửi" });
+      }
+      if (error.message === "Can only review resolved feedback") {
+        return res.status(400).json({ error: "Chỉ có thể đánh giá kiến nghị đã xử lý" });
+      }
+      if (error.message === "Feedback already reviewed") {
+        return res.status(400).json({ error: "Kiến nghị này đã được đánh giá" });
+      }
+      res.status(500).json({ error: "Failed to submit review" });
     }
   });
 

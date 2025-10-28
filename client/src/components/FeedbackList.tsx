@@ -9,6 +9,7 @@ interface FeedbackListProps {
   onAssign: (id: string, assignee: string) => void;
   onEdit?: (feedback: Feedback) => void;
   onDelete?: (id: string) => void;
+  onReviewSubmit?: () => void;
   isAdminMode: boolean;
 }
 
@@ -18,6 +19,7 @@ export default function FeedbackList({
   onAssign,
   onEdit,
   onDelete,
+  onReviewSubmit,
   isAdminMode,
 }: FeedbackListProps) {
   if (feedbackItems.length === 0) {
@@ -46,6 +48,7 @@ export default function FeedbackList({
           onAssign={onAssign}
           onEdit={onEdit}
           onDelete={onDelete}
+          onReviewSubmit={onReviewSubmit}
           isAdminMode={isAdminMode}
         />
       ))}

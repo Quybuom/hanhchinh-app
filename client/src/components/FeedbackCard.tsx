@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -9,11 +10,12 @@ import {
 } from "@/components/ui/select";
 import { formatDistanceToNow } from "date-fns";
 import { vi } from "date-fns/locale";
-import { Building2, Calendar, User, Trash2, Edit, Hash } from "lucide-react";
+import { Building2, Calendar, User, Trash2, Edit, Hash, Star, MessageSquare } from "lucide-react";
 import type { Feedback } from "@shared/schema";
 import { Status, STATUS_OPTIONS } from "@shared/schema";
 import AssigneeInput from "./AssigneeInput";
 import { Button } from "@/components/ui/button";
+import ReviewDialog from "./ReviewDialog";
 
 interface FeedbackCardProps {
   feedback: Feedback;
@@ -21,6 +23,7 @@ interface FeedbackCardProps {
   onAssign: (id: string, assignee: string) => void;
   onEdit?: (feedback: Feedback) => void;
   onDelete?: (id: string) => void;
+  onReviewSubmit?: () => void;
   isAdminMode: boolean;
 }
 
@@ -60,14 +63,19 @@ export default function FeedbackCard({
   onAssign,
   onEdit,
   onDelete,
+  onReviewSubmit,
   isAdminMode,
 }: FeedbackCardProps) {
+  const [isReviewDialogOpen, setIsReviewDialogOpen] = useState(false);
+  
   const timeAgo = formatDistanceToNow(new Date(feedback.submittedAt), {
     addSuffix: true,
     locale: vi,
   });
 
   const feedbackStatus = feedback.status as Status;
+  const hasRating = feedback.rating !== null && feedback.rating !== undefined;
+  const canReview = feedbackStatus === Status.Resolved && !hasRating;
 
   return (
     <Card className={`hover-elevate transition-all ${getStatusCardClass(feedbackStatus)}`} data-testid={`feedback-card-${feedback.id}`}>
@@ -144,12 +152,62 @@ export default function FeedbackCard({
             </div>
           )}
         </div>
+
+        {/* Rating Display */}
+        {hasRating && (
+          <div className="pt-4 border-t border-card-border/50">
+            <div className="flex items-start gap-3">
+              <div className="flex-1">
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="font-medium text-foreground">Đánh giá:</span>
+                  <div className="flex gap-0.5">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <Star
+                        key={star}
+                        className={`w-4 h-4 ${
+                          star <= (feedback.rating || 0)
+                            ? "fill-yellow-400 text-yellow-400"
+                            : "text-gray-300"
+                        }`}
+                      />
+                    ))}
+                  </div>
+                  <span className="text-sm text-muted-foreground">
+                    ({feedback.rating}/5)
+                  </span>
+                </div>
+                {feedback.reviewComment && (
+                  <div className="flex items-start gap-2">
+                    <MessageSquare className="w-4 h-4 mt-0.5 text-muted-foreground" />
+                    <p className="text-sm text-muted-foreground italic">
+                      "{feedback.reviewComment}"
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
       </CardContent>
 
       <CardFooter className="pt-4 border-t border-card-border flex flex-wrap items-center gap-3">
         <Badge variant={getStatusBadgeVariant(feedbackStatus)} data-testid={`feedback-status-badge-${feedback.id}`}>
           {getStatusLabel(feedbackStatus)}
         </Badge>
+
+        {/* Review Button for Public Users */}
+        {!isAdminMode && canReview && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setIsReviewDialogOpen(true)}
+            data-testid={`button-review-${feedback.id}`}
+            className="ml-auto"
+          >
+            <Star className="w-4 h-4 mr-2" />
+            Đánh giá
+          </Button>
+        )}
 
         {isAdminMode && (
           <div className="flex flex-wrap items-center gap-2 ml-auto">
@@ -199,6 +257,16 @@ export default function FeedbackCard({
           </div>
         )}
       </CardFooter>
+
+      {/* Review Dialog */}
+      <ReviewDialog
+        feedbackId={feedback.id}
+        isOpen={isReviewDialogOpen}
+        onClose={() => setIsReviewDialogOpen(false)}
+        onSuccess={() => {
+          onReviewSubmit?.();
+        }}
+      />
     </Card>
   );
 }

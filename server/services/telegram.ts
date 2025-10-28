@@ -45,17 +45,7 @@ export async function sendTelegramNotification(
       return false;
     }
 
-    let fullMessage = `🔔 *Thông báo yêu cầu hỗ trợ mới*\n\n`;
-    
-    if (feedbackDetails) {
-      fullMessage += `*Số kiến nghị:* #${feedbackDetails.trackingNumber}\n`;
-      fullMessage += `*Đơn vị:* ${feedbackDetails.unitName}\n`;
-      fullMessage += `*Tiêu đề:* ${feedbackDetails.title}\n\n`;
-      fullMessage += `*Nội dung:*\n${feedbackDetails.description}\n\n`;
-      fullMessage += `---\n`;
-    }
-    
-    fullMessage += `_${message}_`;
+    const fullMessage = `${message}`;
 
     await bot.sendMessage(chatId, fullMessage, {
       parse_mode: "Markdown",
@@ -134,7 +124,8 @@ export async function sendAssigneeNotification(
     }
 
     const message = `👤 *Phân công xử lý*\n\n` +
-      `Số kiến nghị *#${trackingNumber}* giao cho đồng chí *${assigneeName}* tiếp nhận xử lý`;
+      `Kiến nghị số *#${trackingNumber}* được phân công cho đồng chí *${assigneeName}* tiếp nhận xử lý.\n\n` +
+      `Yêu cầu đồng chí *${assigneeName}* khẩn trương xem xét xử lý.`;
 
     await bot.sendMessage(chatId, message, {
       parse_mode: "Markdown",
