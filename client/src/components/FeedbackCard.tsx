@@ -11,7 +11,8 @@ import { formatDistanceToNow } from "date-fns";
 import { vi } from "date-fns/locale";
 import { Building2, Calendar, User } from "lucide-react";
 import type { Feedback } from "@shared/schema";
-import { Status, STATUS_OPTIONS, ASSIGNEES } from "@shared/schema";
+import { Status, STATUS_OPTIONS } from "@shared/schema";
+import AssigneeInput from "./AssigneeInput";
 
 interface FeedbackCardProps {
   feedback: Feedback;
@@ -103,7 +104,7 @@ export default function FeedbackCard({
               value={feedback.status}
               onValueChange={(value) => {
                 if (value === Status.Received || value === Status.Processing || value === Status.Resolved) {
-                  onUpdateStatus(feedback.id, value);
+                  onUpdateStatus(feedback.id, value as Status);
                 }
               }}
             >
@@ -119,22 +120,11 @@ export default function FeedbackCard({
               </SelectContent>
             </Select>
 
-            <Select
-              value={feedback.assignee || "unassigned"}
-              onValueChange={(value) => onAssign(feedback.id, value === "unassigned" ? "" : value)}
-            >
-              <SelectTrigger className="w-[180px]" data-testid={`select-assignee-${feedback.id}`}>
-                <SelectValue placeholder="Chưa phân công" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="unassigned">Chưa phân công</SelectItem>
-                {ASSIGNEES.map((assignee) => (
-                  <SelectItem key={assignee} value={assignee}>
-                    {assignee}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <AssigneeInput
+              value={feedback.assignee}
+              onChange={(value) => onAssign(feedback.id, value)}
+              testId={`select-assignee-${feedback.id}`}
+            />
           </div>
         )}
       </CardFooter>

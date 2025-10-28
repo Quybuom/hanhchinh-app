@@ -35,6 +35,30 @@ export default function ReportModal({
   const unassignedCount = totalCount - assignedCount;
 
   const resolutionRate = totalCount > 0 ? ((resolvedCount / totalCount) * 100).toFixed(1) : "0";
+  const receivedRate = totalCount > 0 ? ((receivedCount / totalCount) * 100).toFixed(1) : "0";
+  const processingRate = totalCount > 0 ? ((processingCount / totalCount) * 100).toFixed(1) : "0";
+  
+  // Calculate assignee statistics
+  const assigneeStats = feedbackItems.reduce((acc, feedback) => {
+    const assignee = feedback.assignee || "Chưa phân công";
+    if (!acc[assignee]) {
+      acc[assignee] = { total: 0, resolved: 0 };
+    }
+    acc[assignee].total++;
+    if (feedback.status === Status.Resolved) {
+      acc[assignee].resolved++;
+    }
+    return acc;
+  }, {} as Record<string, { total: number; resolved: number }>);
+
+  const assigneeList = Object.entries(assigneeStats)
+    .sort((a, b) => b[1].total - a[1].total)
+    .map(([name, stats]) => ({
+      name,
+      total: stats.total,
+      resolved: stats.resolved,
+      rate: stats.total > 0 ? ((stats.resolved / stats.total) * 100).toFixed(1) : "0"
+    }));
 
   const handleExportCSV = async () => {
     setIsExporting(true);
@@ -86,6 +110,7 @@ export default function ReportModal({
     {
       label: "Tổng phản ánh",
       value: totalCount,
+      percentage: null,
       icon: BarChart3,
       color: "text-primary",
       bgColor: "bg-primary/10",
@@ -93,6 +118,7 @@ export default function ReportModal({
     {
       label: "Mới tiếp nhận",
       value: receivedCount,
+      percentage: receivedRate,
       icon: TrendingUp,
       color: "text-muted-foreground",
       bgColor: "bg-muted",
@@ -100,6 +126,7 @@ export default function ReportModal({
     {
       label: "Đang xử lý",
       value: processingCount,
+      percentage: processingRate,
       icon: TrendingUp,
       color: "text-chart-4",
       bgColor: "bg-chart-4/10",
@@ -107,6 +134,7 @@ export default function ReportModal({
     {
       label: "Đã xử lý",
       value: resolvedCount,
+      percentage: resolutionRate,
       icon: TrendingUp,
       color: "text-chart-2",
       bgColor: "bg-chart-2/10",
@@ -114,6 +142,7 @@ export default function ReportModal({
     {
       label: "Đã phân công",
       value: assignedCount,
+      percentage: null,
       icon: Users,
       color: "text-chart-3",
       bgColor: "bg-chart-3/10",
@@ -121,6 +150,7 @@ export default function ReportModal({
     {
       label: "Chưa phân công",
       value: unassignedCount,
+      percentage: null,
       icon: Users,
       color: "text-muted-foreground",
       bgColor: "bg-muted",
@@ -166,9 +196,14 @@ export default function ReportModal({
                       <div className={`flex items-center justify-center w-10 h-10 rounded-md ${stat.bgColor}`}>
                         <Icon className={`w-5 h-5 ${stat.color}`} />
                       </div>
-                      <div>
+                      <div className="flex-1">
                         <p className="text-xs text-muted-foreground">{stat.label}</p>
-                        <p className="text-2xl font-bold text-foreground">{stat.value}</p>
+                        <div className="flex items-baseline gap-2">
+                          <p className="text-2xl font-bold text-foreground">{stat.value}</p>
+                          {stat.percentage && (
+                            <p className="text-sm text-muted-foreground">({stat.percentage}%)</p>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </CardContent>
@@ -176,6 +211,39 @@ export default function ReportModal({
               );
             })}
           </div>
+
+          {assigneeList.length > 0 && (
+            <div className="space-y-3">
+              <h3 className="text-sm font-semibold text-foreground">Thống kê theo cán bộ</h3>
+              <div className="space-y-2">
+                {assigneeList.map((assignee) => (
+                  <Card key={assignee.name}>
+                    <CardContent className="p-4">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3 flex-1">
+                          <div className="flex items-center justify-center w-10 h-10 rounded-md bg-primary/10">
+                            <Users className="w-5 h-5 text-primary" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-foreground truncate">
+                              {assignee.name}
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              {assignee.resolved}/{assignee.total} đã xử lý ({assignee.rate}%)
+                            </p>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-lg font-bold text-foreground">{assignee.total}</p>
+                          <p className="text-xs text-muted-foreground">phản ánh</p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
         <DialogFooter className="gap-2">
