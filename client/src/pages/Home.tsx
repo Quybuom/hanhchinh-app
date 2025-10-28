@@ -28,7 +28,8 @@ export default function Home() {
 
   const addFeedbackMutation = useMutation({
     mutationFn: async (data: Omit<InsertFeedback, 'status' | 'assignee'>) => {
-      return await apiRequest("POST", "/api/feedbacks", data);
+      const response = await apiRequest("POST", "/api/feedbacks", data);
+      return await response.json();
     },
     onSuccess: (data: any) => {
       queryClient.invalidateQueries({ queryKey: ["/api/feedbacks"] });
@@ -45,7 +46,8 @@ export default function Home() {
 
   const updateStatusMutation = useMutation({
     mutationFn: async ({ id, status }: { id: string; status: Status }) => {
-      return await apiRequest("PATCH", `/api/feedbacks/${id}/status`, { status });
+      const response = await apiRequest("PATCH", `/api/feedbacks/${id}/status`, { status });
+      return await response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/feedbacks"] });
@@ -54,7 +56,8 @@ export default function Home() {
 
   const assignMutation = useMutation({
     mutationFn: async ({ id, assignee }: { id: string; assignee: string | null }) => {
-      return await apiRequest("PATCH", `/api/feedbacks/${id}/assign`, { assignee });
+      const response = await apiRequest("PATCH", `/api/feedbacks/${id}/assign`, { assignee });
+      return await response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/feedbacks"] });
@@ -63,7 +66,8 @@ export default function Home() {
 
   const updateFeedbackMutation = useMutation({
     mutationFn: async ({ id, data }: { id: string; data: Partial<InsertFeedback> }) => {
-      return await apiRequest("PATCH", `/api/feedbacks/${id}`, data);
+      const response = await apiRequest("PATCH", `/api/feedbacks/${id}`, data);
+      return await response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/feedbacks"] });
@@ -76,7 +80,8 @@ export default function Home() {
 
   const deleteFeedbackMutation = useMutation({
     mutationFn: async (id: string) => {
-      return await apiRequest("DELETE", `/api/feedbacks/${id}`);
+      const response = await apiRequest("DELETE", `/api/feedbacks/${id}`);
+      return await response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/feedbacks"] });

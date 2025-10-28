@@ -67,8 +67,10 @@ export default function FeedbackCard({
     locale: vi,
   });
 
+  const feedbackStatus = feedback.status as Status;
+
   return (
-    <Card className={`hover-elevate transition-all ${getStatusCardClass(feedback.status)}`} data-testid={`feedback-card-${feedback.id}`}>
+    <Card className={`hover-elevate transition-all ${getStatusCardClass(feedbackStatus)}`} data-testid={`feedback-card-${feedback.id}`}>
       <CardHeader className="pb-3">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -139,8 +141,8 @@ export default function FeedbackCard({
       </CardContent>
 
       <CardFooter className="pt-4 border-t border-card-border flex flex-wrap items-center gap-3">
-        <Badge variant={getStatusBadgeVariant(feedback.status as Status)} data-testid={`feedback-status-badge-${feedback.id}`}>
-          {getStatusLabel(feedback.status as Status)}
+        <Badge variant={getStatusBadgeVariant(feedbackStatus)} data-testid={`feedback-status-badge-${feedback.id}`}>
+          {getStatusLabel(feedbackStatus)}
         </Badge>
 
         {isAdminMode && (
@@ -164,10 +166,10 @@ export default function FeedbackCard({
             </Button>
 
             <Select
-              value={feedback.status}
+              value={feedbackStatus}
               onValueChange={(value) => {
                 if (value === Status.Received || value === Status.Processing || value === Status.Resolved) {
-                  onUpdateStatus(feedback.id, value as Status);
+                  onUpdateStatus(feedback.id, value);
                 }
               }}
             >
