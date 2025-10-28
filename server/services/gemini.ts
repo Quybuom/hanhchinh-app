@@ -11,17 +11,18 @@ const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || "" });
 
 export async function generateTelegramNotification(feedback: Feedback): Promise<string> {
   try {
-    const prompt = `Bạn là một trợ lý AI của hệ thống quản lý phản ánh của chính quyền tỉnh Bắc Ninh, Việt Nam. 
-Tạo một thông báo ngắn gọn, chuyên nghiệp để xác nhận đã nhận phản ánh mới với thông tin sau:
+    const prompt = `Bạn là một trợ lý AI của hệ thống quản lý yêu cầu hỗ trợ của chính quyền tỉnh Bắc Ninh, Việt Nam. 
+Tạo một thông báo ngắn gọn, chuyên nghiệp để xác nhận đã nhận yêu cầu hỗ trợ mới với thông tin sau:
 
+Số kiến nghị: #${feedback.trackingNumber}
 Đơn vị: ${feedback.unitName}
 Tiêu đề: ${feedback.title}
 Mô tả: ${feedback.description}
 
 Thông báo nên:
 - Ngắn gọn, lịch sự và chuyên nghiệp
-- Xác nhận đã nhận phản ánh
-- Cam kết sẽ xem xét và xử lý
+- Xác nhận đã nhận yêu cầu hỗ trợ
+- KẾT THÚC BẮT BUỘC bằng câu: "Đã tiếp nhận yêu cầu hỗ trợ chờ phân công xử lý"
 - Sử dụng tiếng Việt chuẩn
 - Độ dài khoảng 2-3 câu
 
@@ -37,17 +38,17 @@ Chỉ trả về nội dung thông báo, không thêm giải thích.`;
       ],
     });
 
-    // Call the text() method to get the response text
-    const text = response.text?.() || response.response?.text?.();
+    // Get the response text using the text getter
+    const text = response.text;
     
     if (text && typeof text === 'string' && text.trim().length > 0) {
       return text.trim();
     }
     
     console.warn("Gemini response did not contain text:", response);
-    return "Đã tiếp nhận phản ánh của bạn. Chúng tôi sẽ xem xét và xử lý trong thời gian sớm nhất.";
+    return `Số kiến nghị #${feedback.trackingNumber}. Đã tiếp nhận yêu cầu hỗ trợ chờ phân công xử lý`;
   } catch (error) {
     console.error("Error generating notification:", error);
-    return "Đã tiếp nhận phản ánh của bạn. Chúng tôi sẽ xem xét và xử lý trong thời gian sớm nhất.";
+    return `Số kiến nghị #${feedback.trackingNumber}. Đã tiếp nhận yêu cầu hỗ trợ chờ phân công xử lý`;
   }
 }

@@ -23,6 +23,7 @@ function initializeBot() {
 export async function sendTelegramNotification(
   message: string,
   feedbackDetails?: {
+    trackingNumber: number;
     unitName: string;
     title: string;
     description: string;
@@ -44,9 +45,10 @@ export async function sendTelegramNotification(
       return false;
     }
 
-    let fullMessage = `🔔 *Thông báo phản ánh mới*\n\n`;
+    let fullMessage = `🔔 *Thông báo yêu cầu hỗ trợ mới*\n\n`;
     
     if (feedbackDetails) {
+      fullMessage += `*Số kiến nghị:* #${feedbackDetails.trackingNumber}\n`;
       fullMessage += `*Đơn vị:* ${feedbackDetails.unitName}\n`;
       fullMessage += `*Tiêu đề:* ${feedbackDetails.title}\n\n`;
       fullMessage += `*Nội dung:*\n${feedbackDetails.description}\n\n`;
@@ -68,6 +70,7 @@ export async function sendTelegramNotification(
 }
 
 export async function sendStatusUpdateNotification(
+  trackingNumber: number,
   feedbackTitle: string,
   unitName: string,
   newStatus: string
@@ -95,8 +98,9 @@ export async function sendStatusUpdateNotification(
     const statusLabel = statusMap[newStatus] || newStatus;
 
     const message = `✅ *Cập nhật trạng thái*\n\n` +
+      `*Số kiến nghị:* #${trackingNumber}\n` +
       `*Đơn vị:* ${unitName}\n` +
-      `*Phản ánh:* ${feedbackTitle}\n` +
+      `*Yêu cầu:* ${feedbackTitle}\n` +
       `*Trạng thái mới:* ${statusLabel}`;
 
     await bot.sendMessage(chatId, message, {
@@ -107,6 +111,39 @@ export async function sendStatusUpdateNotification(
     return true;
   } catch (error) {
     console.error("Error sending status update notification:", error);
+    return false;
+  }
+}
+
+export async function sendAssigneeNotification(
+  trackingNumber: number,
+  assigneeName: string
+): Promise<boolean> {
+  try {
+    if (!bot) {
+      bot = initializeBot();
+    }
+
+    if (!bot) {
+      return false;
+    }
+
+    const chatId = process.env.TELEGRAM_CHAT_ID;
+    if (!chatId) {
+      return false;
+    }
+
+    const message = `👤 *Phân công xử lý*\n\n` +
+      `Số kiến nghị *#${trackingNumber}* giao cho đồng chí *${assigneeName}* tiếp nhận xử lý`;
+
+    await bot.sendMessage(chatId, message, {
+      parse_mode: "Markdown",
+    });
+
+    console.log("Assignee notification sent successfully");
+    return true;
+  } catch (error) {
+    console.error("Error sending assignee notification:", error);
     return false;
   }
 }

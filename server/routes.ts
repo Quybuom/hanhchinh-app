@@ -5,7 +5,7 @@ import { insertFeedbackSchema, Status } from "@shared/schema";
 import { z } from "zod";
 import { fromZodError } from "zod-validation-error";
 import { generateTelegramNotification } from "./services/gemini";
-import { sendTelegramNotification, sendStatusUpdateNotification } from "./services/telegram";
+import { sendTelegramNotification, sendStatusUpdateNotification, sendAssigneeNotification } from "./services/telegram";
 import { verifyAdminPassword } from "./services/auth";
 import { upload, getFileUrl } from "./upload";
 import { generateCSV, generateStatisticsReport } from "./services/export";
@@ -129,6 +129,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Send Telegram notification (non-blocking) - always send even if Gemini fails
       sendTelegramNotification(message, {
+        trackingNumber: feedback.trackingNumber,
         unitName: feedback.unitName,
         title: feedback.title,
         description: feedback.description,
@@ -165,6 +166,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Send Telegram notification for status update (non-blocking)
       sendStatusUpdateNotification(
+        feedback.trackingNumber,
         feedback.title,
         feedback.unitName,
         feedback.status
@@ -197,6 +199,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       if (!feedback) {
         return res.status(404).json({ error: "Feedback not found" });
+      }
+
+      // Send Telegram notification for assignee assignment (non-blocking)
+      if (feedback.assignee) {
+        sendAssigneeNotification(
+          feedback.trackingNumber,
+          feedback.assignee
+        ).catch(err => console.error("Telegram assignee notification failed:", err));
       }
 
       res.json(feedback);
