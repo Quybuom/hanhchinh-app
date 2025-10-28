@@ -42,10 +42,4 @@ export const STATUS_OPTIONS = [
   { value: Status.Resolved, label: 'Đã xử lý' },
 ];
 
-export const ASSIGNEES = [
-  'Nguyễn Văn An',
-  'Trần Thị Bình',
-  'Lê Hoàng Cường',
-  'Phạm Thị Dung',
-  'Võ Minh Long',
-];
+export const ASSIGNEES: string[] = [];
