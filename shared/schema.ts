@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, timestamp, serial } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -11,6 +11,7 @@ export enum Status {
 
 export const feedbacks = pgTable("feedbacks", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  trackingNumber: serial("tracking_number").notNull().unique(),
   unitName: text("unit_name").notNull(),
   title: text("title").notNull(),
   description: text("description").notNull(),
@@ -24,6 +25,7 @@ export const feedbacks = pgTable("feedbacks", {
 
 export const insertFeedbackSchema = createInsertSchema(feedbacks).omit({
   id: true,
+  trackingNumber: true,
   submittedAt: true,
 }).extend({
   status: z.enum([Status.Received, Status.Processing, Status.Resolved]).default(Status.Received),
