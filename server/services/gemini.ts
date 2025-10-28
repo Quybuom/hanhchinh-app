@@ -37,11 +37,14 @@ Chỉ trả về nội dung thông báo, không thêm giải thích.`;
       ],
     });
 
-    const text = response.text;
-    if (text && text.trim().length > 0) {
+    // Call the text() method to get the response text
+    const text = response.text?.() || response.response?.text?.();
+    
+    if (text && typeof text === 'string' && text.trim().length > 0) {
       return text.trim();
     }
     
+    console.warn("Gemini response did not contain text:", response);
     return "Đã tiếp nhận phản ánh của bạn. Chúng tôi sẽ xem xét và xử lý trong thời gian sớm nhất.";
   } catch (error) {
     console.error("Error generating notification:", error);
