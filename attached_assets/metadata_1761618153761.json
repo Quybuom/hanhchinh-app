@@ -1,0 +1,5 @@
+{
+  "name": "Hệ thống Quản lý Phản ánh",
+  "description": "Một ứng dụng web để tiếp nhận, quản lý, và theo dõi các phản ánh, khó khăn, và vướng mắc từ các đơn vị. Hệ thống cho phép phân công người xử lý, cập nhật trạng thái, và tổng hợp báo cáo.",
+  "requestFramePermissions": []
+}
