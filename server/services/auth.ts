@@ -13,5 +13,16 @@ export function verifyAdminPassword(password: string): boolean {
     console.warn("Admin authentication attempted but ADMIN_PASSWORD is not configured");
     return false;
   }
-  return password === ADMIN_PASSWORD;
+  
+  // Trim the stored password as well in case it has whitespace
+  const trimmedAdminPassword = ADMIN_PASSWORD.trim();
+  const isValid = password === trimmedAdminPassword;
+  
+  if (!isValid) {
+    console.log("Password comparison failed");
+    console.log(`Provided password length: ${password.length}`);
+    console.log(`Stored password length: ${trimmedAdminPassword.length}`);
+  }
+  
+  return isValid;
 }

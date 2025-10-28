@@ -33,7 +33,9 @@ export default function AdminAuthModal({
     setError(false);
     
     try {
-      const success = await onAuthenticate(password);
+      // Trim whitespace from password to avoid authentication issues
+      const trimmedPassword = password.trim();
+      const success = await onAuthenticate(trimmedPassword);
       if (success) {
         setPassword("");
         setError(false);

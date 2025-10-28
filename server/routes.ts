@@ -62,14 +62,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { password } = req.body;
       
       if (!password || typeof password !== 'string') {
+        console.log("Login failed: Password not provided or invalid type");
         return res.status(400).json({ error: "Password is required" });
       }
 
-      const isValid = verifyAdminPassword(password);
+      // Trim whitespace from password
+      const trimmedPassword = password.trim();
+      const isValid = verifyAdminPassword(trimmedPassword);
       
       if (isValid) {
+        console.log("Admin login successful");
         res.json({ success: true });
       } else {
+        console.log("Login failed: Invalid password");
         res.status(401).json({ error: "Invalid password" });
       }
     } catch (error) {
