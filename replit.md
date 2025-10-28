@@ -1,7 +1,7 @@
-# Hệ thống Quản lý Phản ánh
-## Vietnamese Feedback Management System
+# Hệ thống Hỗ trợ Người dùng
+## HỖ TRỢ NGƯỜI DÙNG HỆ THỐNG GIẢI QUYẾT THỦ TỤC HÀNH CHÍNH TỈNH BẮC NINH
 
-A professional administrative feedback tracking system for Trung tâm Phục vụ hành chính công tỉnh Bắc Ninh.
+A professional administrative feedback tracking system for Bắc Ninh Province.
 
 ## Overview
 This application enables government departments to submit, track, and manage feedback, issues, and suggestions. It features AI-powered notification generation using Google Gemini and secure admin authentication.

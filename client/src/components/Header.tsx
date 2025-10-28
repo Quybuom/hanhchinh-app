@@ -25,11 +25,11 @@ export default function Header({
               <ClipboardList className="w-6 h-6 text-primary" />
             </div>
             <div>
-              <h1 className="text-lg font-semibold text-foreground leading-tight">
-                Hệ thống Quản lý Phản ánh
+              <h1 className="text-sm sm:text-base font-semibold text-foreground leading-tight">
+                HỖ TRỢ NGƯỜI DÙNG HỆ THỐNG
               </h1>
-              <p className="text-xs text-muted-foreground hidden sm:block">
-                Bắc Ninh
+              <p className="text-xs text-muted-foreground">
+                GIẢI QUYẾT THỦ TỤC HÀNH CHÍNH TỈNH BẮC NINH
               </p>
             </div>
           </div>
