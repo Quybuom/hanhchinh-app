@@ -101,7 +101,11 @@ export default function FeedbackCard({
           <div className="flex flex-wrap items-center gap-2 ml-auto">
             <Select
               value={feedback.status}
-              onValueChange={(value) => onUpdateStatus(feedback.id, value as Status)}
+              onValueChange={(value) => {
+                if (value === Status.Received || value === Status.Processing || value === Status.Resolved) {
+                  onUpdateStatus(feedback.id, value);
+                }
+              }}
             >
               <SelectTrigger className="w-[150px]" data-testid={`select-status-${feedback.id}`}>
                 <SelectValue />

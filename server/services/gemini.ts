@@ -29,10 +29,20 @@ Chỉ trả về nội dung thông báo, không thêm giải thích.`;
 
     const response = await ai.models.generateContent({
       model: "gemini-2.5-flash",
-      contents: prompt,
+      contents: [
+        {
+          role: "user",
+          parts: [{ text: prompt }]
+        }
+      ],
     });
 
-    return response.text || "Đã tiếp nhận phản ánh của bạn. Chúng tôi sẽ xem xét và xử lý trong thời gian sớm nhất.";
+    const text = response.text;
+    if (text && text.trim().length > 0) {
+      return text.trim();
+    }
+    
+    return "Đã tiếp nhận phản ánh của bạn. Chúng tôi sẽ xem xét và xử lý trong thời gian sớm nhất.";
   } catch (error) {
     console.error("Error generating notification:", error);
     return "Đã tiếp nhận phản ánh của bạn. Chúng tôi sẽ xem xét và xử lý trong thời gian sớm nhất.";

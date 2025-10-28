@@ -5,8 +5,31 @@ import { insertFeedbackSchema, Status } from "@shared/schema";
 import { z } from "zod";
 import { fromZodError } from "zod-validation-error";
 import { generateTelegramNotification } from "./services/gemini";
+import { verifyAdminPassword } from "./services/auth";
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Admin authentication
+  app.post("/api/admin/login", async (req, res) => {
+    try {
+      const { password } = req.body;
+      
+      if (!password || typeof password !== 'string') {
+        return res.status(400).json({ error: "Password is required" });
+      }
+
+      const isValid = verifyAdminPassword(password);
+      
+      if (isValid) {
+        res.json({ success: true });
+      } else {
+        res.status(401).json({ error: "Invalid password" });
+      }
+    } catch (error) {
+      console.error("Error during admin login:", error);
+      res.status(500).json({ error: "Authentication failed" });
+    }
+  });
+
   // Get all feedbacks
   app.get("/api/feedbacks", async (_req, res) => {
     try {

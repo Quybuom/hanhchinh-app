@@ -10,12 +10,12 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Lock, AlertCircle } from "lucide-react";
+import { Lock, AlertCircle, Loader2 } from "lucide-react";
 
 interface AdminAuthModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onAuthenticate: (password: string) => boolean;
+  onAuthenticate: (password: string) => Promise<boolean>;
 }
 
 export default function AdminAuthModal({
@@ -25,15 +25,25 @@ export default function AdminAuthModal({
 }: AdminAuthModalProps) {
   const [password, setPassword] = useState("");
   const [error, setError] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const success = onAuthenticate(password);
-    if (success) {
-      setPassword("");
-      setError(false);
-    } else {
+    setIsLoading(true);
+    setError(false);
+    
+    try {
+      const success = await onAuthenticate(password);
+      if (success) {
+        setPassword("");
+        setError(false);
+      } else {
+        setError(true);
+      }
+    } catch {
       setError(true);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -84,11 +94,13 @@ export default function AdminAuthModal({
               type="button"
               variant="outline"
               onClick={handleClose}
+              disabled={isLoading}
               data-testid="button-cancel"
             >
               Hủy
             </Button>
-            <Button type="submit" data-testid="button-login">
+            <Button type="submit" disabled={isLoading} data-testid="button-login">
+              {isLoading && <Loader2 className="mr-2 w-4 h-4 animate-spin" />}
               Đăng nhập
             </Button>
           </DialogFooter>

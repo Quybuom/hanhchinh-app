@@ -12,8 +12,6 @@ import Toast from "@/components/Toast";
 import AdminAuthModal from "@/components/AdminAuthModal";
 import { Loader2 } from "lucide-react";
 
-const ADMIN_PASSWORD = "admin123";
-
 export default function Home() {
   const [isAddModalOpen, setAddModalOpen] = useState(false);
   const [isReportModalOpen, setReportModalOpen] = useState(false);
@@ -29,9 +27,9 @@ export default function Home() {
     mutationFn: async (data: Omit<InsertFeedback, 'status' | 'assignee'>) => {
       return await apiRequest("POST", "/api/feedbacks", data);
     },
-    onSuccess: (data) => {
+    onSuccess: (data: any) => {
       queryClient.invalidateQueries({ queryKey: ["/api/feedbacks"] });
-      if (data.message) {
+      if (data && typeof data === 'object' && 'message' in data) {
         setToastMessage(data.message);
       } else {
         setToastMessage("Phản ánh đã được gửi thành công");
@@ -81,13 +79,19 @@ export default function Home() {
     [assignMutation]
   );
 
-  const handleAuthenticate = (password: string): boolean => {
-    if (password === ADMIN_PASSWORD) {
-      setAdminMode(true);
-      setAuthModalOpen(false);
-      return true;
+  const handleAuthenticate = async (password: string): Promise<boolean> => {
+    try {
+      const response = await apiRequest("POST", "/api/admin/login", { password });
+      if (response && typeof response === 'object' && 'success' in response) {
+        setAdminMode(true);
+        setAuthModalOpen(false);
+        return true;
+      }
+      return false;
+    } catch (error) {
+      console.error("Authentication failed:", error);
+      return false;
     }
-    return false;
   };
 
   const handleAdminLogout = () => {
