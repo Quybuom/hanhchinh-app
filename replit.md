@@ -7,7 +7,8 @@ A professional administrative feedback tracking system for Bắc Ninh Province.
 This application enables government departments to submit, track, and manage feedback, issues, and suggestions. It features AI-powered notification generation using Google Gemini and secure admin authentication.
 
 ## Key Features
-- **Public Feedback Submission**: Anyone can submit feedback with department name, title, description, and optional images
+- **Public Feedback Submission**: Anyone can submit feedback with department name, title, description, contact information (name and phone), and optional images
+- **Contact Information Collection**: Required contact name and phone number (10-11 digits) for all new feedback submissions
 - **Admin Dashboard**: Secure admin access to view reports, update status, and assign feedback to staff
 - **AI Notifications**: Gemini AI generates contextual Vietnamese notification messages
 - **Status Tracking**: Three-stage workflow (Received → Processing → Resolved)
@@ -54,9 +55,12 @@ The application runs automatically via the "Start application" workflow which ex
 1. Click "Gửi phản ánh" button in the header
 2. Fill in the form:
    - Tên đơn vị (Department name)
+   - **Thông tin liên hệ** (Contact Information):
+     - Họ và tên (Full name - required)
+     - Số điện thoại (Phone number - required, 10-11 digits)
    - Tiêu đề (Title)
    - Mô tả chi tiết (Detailed description)
-   - Link hình ảnh (Image URL - optional)
+   - Hình ảnh (Image upload - optional, max 5MB)
 3. Click "Gửi phản ánh" to submit
 4. Receive AI-generated confirmation message
 
@@ -95,11 +99,17 @@ interface Feedback {
   title: string;
   description: string;
   imageUrl: string | null;
+  contactName: string | null;
+  contactPhone: string | null;
   submittedAt: Date;
   status: "received" | "processing" | "resolved";
   assignee: string | null;
 }
 ```
+
+**Validation Rules for New Submissions:**
+- `contactName`: Required, minimum 1 character
+- `contactPhone`: Required, must be 10-11 digits (Vietnamese phone format)
 
 ### API Endpoints
 - `GET /api/feedbacks` - List all feedback
@@ -117,7 +127,12 @@ The application follows a professional Vietnamese government aesthetic with:
 - Subtle shadows and smooth transitions
 
 ## Recent Changes
-- October 28, 2025: Production deployment with enhanced features
+- October 28, 2025: System renamed and contact information feature added
+  - **System Name Updated**: "HỖ TRỢ NGƯỜI DÙNG HỆ THỐNG GIẢI QUYẾT THỦ TỤC HÀNH CHÍNH TỈNH BẮC NINH"
+  - **Contact Information**: Required contact name and phone number for all new feedback submissions
+  - Enhanced form with dedicated "Thông tin liên hệ" section
+  - Phone validation: 10-11 digits Vietnamese format
+  - Database schema updated with nullable contact fields for backward compatibility
   - Complete feedback management system with persistent PostgreSQL database
   - AI-powered notification messages with Gemini
   - Real-time Telegram Bot notifications (optional feature)
