@@ -1,5 +1,6 @@
-import { type Feedback, type InsertFeedback, Status } from "@shared/schema";
-import { randomUUID } from "crypto";
+import { feedbacks, type Feedback, type InsertFeedback, Status } from "@shared/schema";
+import { db } from "./db";
+import { eq, desc } from "drizzle-orm";
 
 export interface IStorage {
   getAllFeedbacks(): Promise<Feedback[]>;
@@ -9,55 +10,46 @@ export interface IStorage {
   assignFeedback(id: string, assignee: string | null): Promise<Feedback | undefined>;
 }
 
-export class MemStorage implements IStorage {
-  private feedbacks: Map<string, Feedback>;
-
-  constructor() {
-    this.feedbacks = new Map();
-  }
-
+export class DatabaseStorage implements IStorage {
   async getAllFeedbacks(): Promise<Feedback[]> {
-    const feedbacks = Array.from(this.feedbacks.values());
-    return feedbacks.sort((a, b) => 
-      new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime()
-    );
+    return await db.select().from(feedbacks).orderBy(desc(feedbacks.submittedAt));
   }
 
   async getFeedback(id: string): Promise<Feedback | undefined> {
-    return this.feedbacks.get(id);
+    const [feedback] = await db.select().from(feedbacks).where(eq(feedbacks.id, id));
+    return feedback || undefined;
   }
 
   async createFeedback(insertFeedback: InsertFeedback): Promise<Feedback> {
-    const id = randomUUID();
-    const feedback: Feedback = {
-      ...insertFeedback,
-      id,
-      submittedAt: new Date(),
-      status: insertFeedback.status || Status.Received,
-      assignee: insertFeedback.assignee || null,
-      imageUrl: insertFeedback.imageUrl || null,
-    };
-    this.feedbacks.set(id, feedback);
+    const [feedback] = await db
+      .insert(feedbacks)
+      .values({
+        ...insertFeedback,
+        status: insertFeedback.status || Status.Received,
+        assignee: insertFeedback.assignee || null,
+        imageUrl: insertFeedback.imageUrl || null,
+      })
+      .returning();
     return feedback;
   }
 
   async updateFeedbackStatus(id: string, status: Status): Promise<Feedback | undefined> {
-    const feedback = this.feedbacks.get(id);
-    if (!feedback) return undefined;
-
-    const updated = { ...feedback, status };
-    this.feedbacks.set(id, updated);
-    return updated;
+    const [feedback] = await db
+      .update(feedbacks)
+      .set({ status })
+      .where(eq(feedbacks.id, id))
+      .returning();
+    return feedback || undefined;
   }
 
   async assignFeedback(id: string, assignee: string | null): Promise<Feedback | undefined> {
-    const feedback = this.feedbacks.get(id);
-    if (!feedback) return undefined;
-
-    const updated = { ...feedback, assignee };
-    this.feedbacks.set(id, updated);
-    return updated;
+    const [feedback] = await db
+      .update(feedbacks)
+      .set({ assignee })
+      .where(eq(feedbacks.id, id))
+      .returning();
+    return feedback || undefined;
   }
 }
 
-export const storage = new MemStorage();
+export const storage = new DatabaseStorage();
