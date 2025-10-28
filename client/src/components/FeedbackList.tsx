@@ -30,7 +30,7 @@ export default function FeedbackList({
           Chưa có phản ánh nào
         </h3>
         <p className="text-sm text-muted-foreground text-center max-w-md">
-          Hiện tại chưa có phản ánh nào được gửi đến hệ thống. Nhấn nút "Gửi phản ánh" để thêm phản ánh mới.
+          Hiện tại chưa có yêu cầu nào được gửi đến hệ thống. Nhấn nút "GỬI YÊU CẦU HỖ TRỢ" để thêm yêu cầu mới.
         </p>
       </div>
     );

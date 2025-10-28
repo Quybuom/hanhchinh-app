@@ -42,7 +42,7 @@ export default function Header({
               data-testid="button-add-feedback"
             >
               <ClipboardList className="w-4 h-4" />
-              <span className="hidden sm:inline">Gửi phản ánh</span>
+              <span className="hidden sm:inline">GỬI YÊU CẦU HỖ TRỢ</span>
               <span className="sm:hidden">Gửi</span>
             </Button>
 

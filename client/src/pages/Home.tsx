@@ -36,11 +36,11 @@ export default function Home() {
       if (data && typeof data === 'object' && 'message' in data) {
         setToastMessage(data.message);
       } else {
-        setToastMessage("Phản ánh đã được gửi thành công");
+        setToastMessage("Yêu cầu hỗ trợ đã được gửi thành công");
       }
     },
     onError: () => {
-      setToastMessage("Lỗi khi gửi phản ánh");
+      setToastMessage("Lỗi khi gửi yêu cầu hỗ trợ");
     },
   });
 
