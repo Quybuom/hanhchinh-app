@@ -2,6 +2,11 @@ import TelegramBot from "node-telegram-bot-api";
 
 let bot: TelegramBot | null = null;
 
+// Escape Markdown special characters to prevent parse errors
+function escapeMarkdown(text: string): string {
+  return text.replace(/([_*\[\]()~`>#+\-=|{}.!\\])/g, '\\$1');
+}
+
 function initializeBot() {
   const token = process.env.TELEGRAM_BOT_TOKEN;
   
@@ -45,7 +50,25 @@ export async function sendTelegramNotification(
       return false;
     }
 
-    const fullMessage = `${message}`;
+    let fullMessage = "";
+    
+    if (feedbackDetails) {
+      // Escape all user-provided text to prevent Markdown parsing errors
+      const safeUnitName = escapeMarkdown(feedbackDetails.unitName);
+      const safeTitle = escapeMarkdown(feedbackDetails.title);
+      const safeDescription = escapeMarkdown(feedbackDetails.description);
+      const safeMessage = escapeMarkdown(message);
+      
+      fullMessage = `🔔 *Thông báo yêu cầu hỗ trợ mới*\n\n` +
+        `*Số kiến nghị:* #${feedbackDetails.trackingNumber}\n` +
+        `*Đơn vị:* ${safeUnitName}\n` +
+        `*Tiêu đề:* ${safeTitle}\n\n` +
+        `*Nội dung:*\n${safeDescription}\n\n` +
+        `---\n` +
+        `${safeMessage}`;
+    } else {
+      fullMessage = message;
+    }
 
     await bot.sendMessage(chatId, fullMessage, {
       parse_mode: "Markdown",
@@ -87,10 +110,14 @@ export async function sendStatusUpdateNotification(
 
     const statusLabel = statusMap[newStatus] || newStatus;
 
+    // Escape user-provided fields
+    const safeUnitName = escapeMarkdown(unitName);
+    const safeFeedbackTitle = escapeMarkdown(feedbackTitle);
+
     const message = `✅ *Cập nhật trạng thái*\n\n` +
       `*Số kiến nghị:* #${trackingNumber}\n` +
-      `*Đơn vị:* ${unitName}\n` +
-      `*Yêu cầu:* ${feedbackTitle}\n` +
+      `*Đơn vị:* ${safeUnitName}\n` +
+      `*Yêu cầu:* ${safeFeedbackTitle}\n` +
       `*Trạng thái mới:* ${statusLabel}`;
 
     await bot.sendMessage(chatId, message, {
@@ -123,9 +150,12 @@ export async function sendAssigneeNotification(
       return false;
     }
 
+    // Escape user-provided assignee name
+    const safeAssigneeName = escapeMarkdown(assigneeName);
+
     const message = `👤 *Phân công xử lý*\n\n` +
-      `Kiến nghị số *#${trackingNumber}* được phân công cho đồng chí *${assigneeName}* tiếp nhận xử lý.\n\n` +
-      `Yêu cầu đồng chí *${assigneeName}* khẩn trương xem xét xử lý.`;
+      `Kiến nghị số *#${trackingNumber}* được phân công cho đồng chí *${safeAssigneeName}* tiếp nhận xử lý.\n\n` +
+      `Yêu cầu đồng chí *${safeAssigneeName}* khẩn trương xem xét xử lý.`;
 
     await bot.sendMessage(chatId, message, {
       parse_mode: "Markdown",

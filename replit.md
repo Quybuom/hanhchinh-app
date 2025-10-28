@@ -107,6 +107,8 @@ interface Feedback {
   submittedAt: Date;
   status: "received" | "processing" | "resolved";
   assignee: string | null;
+  rating: number | null; // 1-5 stars, only after resolved
+  reviewComment: string | null; // Optional review comment
 }
 ```
 
@@ -118,7 +120,8 @@ interface Feedback {
 - `GET /api/feedbacks` - List all feedback
 - `POST /api/feedbacks` - Create new feedback
 - `PATCH /api/feedbacks/:id/status` - Update status
-- `PATCH /api/feedbacks/:id/assign` - Assign to staff
+- `PATCH /api/feedbacks/:id/assign` - Assign to staff (auto-updates status to "processing")
+- `POST /api/feedbacks/:id/review` - Submit rating (requires contactPhone verification)
 - `POST /api/admin/login` - Admin authentication
 
 ## Design
@@ -130,7 +133,21 @@ The application follows a professional Vietnamese government aesthetic with:
 - Subtle shadows and smooth transitions
 
 ## Recent Changes
-- October 28, 2025 (Latest): UI improvements and tracking number system
+- October 28, 2025 (Latest): Enhanced Telegram notification format and rating system
+  - **Improved Telegram New Feedback Notification**: Complete format with all details
+    - Header: "🔔 Thông báo yêu cầu hỗ trợ mới"
+    - Displays: Tracking number, Department, Title, Full description
+    - Footer: "Đã tiếp nhận yêu cầu hỗ trợ chờ phân công xử lý"
+  - **Rating System**: Added user feedback rating feature
+    - Rating: 1-5 stars with optional review comment
+    - Phone verification: Only submitter can review (must match contactPhone)
+    - Only available when status = "resolved"
+    - One review per feedback (prevents duplicate reviews)
+    - Error messages properly displayed to users
+  - **Auto Status Update**: Status automatically changes to "processing" when assignee is assigned
+  - **Assignee Notification**: "Kiến nghị số #... được phân công cho đồng chí [name] tiếp nhận xử lý. Yêu cầu đồng chí [name] khẩn trương xem xét xử lý"
+
+- October 28, 2025: UI improvements and tracking number system
   - **Tracking Number System**: Added auto-incrementing tracking numbers (#1, #2, #3...)
     - Database column: `tracking_number` (serial, unique, not null)
     - Displayed as Badge with Hash icon and font-mono style on all feedback cards
