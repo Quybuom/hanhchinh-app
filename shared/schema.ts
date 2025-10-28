@@ -15,6 +15,8 @@ export const feedbacks = pgTable("feedbacks", {
   title: text("title").notNull(),
   description: text("description").notNull(),
   imageUrl: text("image_url"),
+  contactName: text("contact_name"),
+  contactPhone: text("contact_phone"),
   submittedAt: timestamp("submitted_at").notNull().defaultNow(),
   status: text("status").notNull().default(Status.Received),
   assignee: text("assignee"),
@@ -27,6 +29,8 @@ export const insertFeedbackSchema = createInsertSchema(feedbacks).omit({
   status: z.enum([Status.Received, Status.Processing, Status.Resolved]).default(Status.Received),
   assignee: z.string().nullable().optional(),
   imageUrl: z.string().nullable().optional(),
+  contactName: z.string().min(1, "Họ tên không được để trống"),
+  contactPhone: z.string().regex(/^[0-9]{10,11}$/, "Số điện thoại phải có 10-11 chữ số"),
 });
 
 export type InsertFeedback = z.infer<typeof insertFeedbackSchema>;
