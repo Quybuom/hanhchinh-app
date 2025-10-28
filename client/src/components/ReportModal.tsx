@@ -2,13 +2,16 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import type { Feedback } from "@shared/schema";
 import { Status } from "@shared/schema";
-import { BarChart3, TrendingUp, Users } from "lucide-react";
+import { BarChart3, TrendingUp, Users, Download, FileText } from "lucide-react";
+import { useState } from "react";
 
 interface ReportModalProps {
   isOpen: boolean;
@@ -21,6 +24,8 @@ export default function ReportModal({
   onClose,
   feedbackItems,
 }: ReportModalProps) {
+  const [isExporting, setIsExporting] = useState(false);
+
   const totalCount = feedbackItems.length;
   const receivedCount = feedbackItems.filter((f) => f.status === Status.Received).length;
   const processingCount = feedbackItems.filter((f) => f.status === Status.Processing).length;
@@ -30,6 +35,52 @@ export default function ReportModal({
   const unassignedCount = totalCount - assignedCount;
 
   const resolutionRate = totalCount > 0 ? ((resolvedCount / totalCount) * 100).toFixed(1) : "0";
+
+  const handleExportCSV = async () => {
+    setIsExporting(true);
+    try {
+      const response = await fetch("/api/export/csv");
+      if (!response.ok) throw new Error("Export failed");
+      
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `phan-anh-${new Date().toISOString().split('T')[0]}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error("Error exporting CSV:", error);
+      alert("Lỗi khi xuất file CSV");
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
+  const handleExportReport = async () => {
+    setIsExporting(true);
+    try {
+      const response = await fetch("/api/export/report");
+      if (!response.ok) throw new Error("Export failed");
+      
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `bao-cao-${new Date().toISOString().split('T')[0]}.txt`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error("Error exporting report:", error);
+      alert("Lỗi khi xuất báo cáo");
+    } finally {
+      setIsExporting(false);
+    }
+  };
 
   const stats = [
     {
@@ -126,6 +177,26 @@ export default function ReportModal({
             })}
           </div>
         </div>
+
+        <DialogFooter className="gap-2">
+          <Button
+            variant="outline"
+            onClick={handleExportReport}
+            disabled={isExporting || totalCount === 0}
+            data-testid="button-export-report"
+          >
+            <FileText className="mr-2 w-4 h-4" />
+            Xuất báo cáo (.txt)
+          </Button>
+          <Button
+            onClick={handleExportCSV}
+            disabled={isExporting || totalCount === 0}
+            data-testid="button-export-csv"
+          >
+            <Download className="mr-2 w-4 h-4" />
+            Xuất dữ liệu (.csv)
+          </Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );

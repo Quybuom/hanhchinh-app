@@ -8,6 +8,7 @@ import { generateTelegramNotification } from "./services/gemini";
 import { sendTelegramNotification, sendStatusUpdateNotification } from "./services/telegram";
 import { verifyAdminPassword } from "./services/auth";
 import { upload, getFileUrl } from "./upload";
+import { generateCSV, generateStatisticsReport } from "./services/export";
 import path from "path";
 import multer from "multer";
 
@@ -197,6 +198,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error assigning feedback:", error);
       res.status(500).json({ error: "Failed to assign feedback" });
+    }
+  });
+
+  // Export feedbacks as CSV
+  app.get("/api/export/csv", async (_req, res) => {
+    try {
+      const feedbacks = await storage.getAllFeedbacks();
+      const csv = generateCSV(feedbacks);
+      
+      res.setHeader("Content-Type", "text/csv; charset=utf-8");
+      res.setHeader("Content-Disposition", `attachment; filename="phan-anh-${new Date().toISOString().split('T')[0]}.csv"`);
+      
+      // Add BOM for Excel to recognize UTF-8
+      res.send("\uFEFF" + csv);
+    } catch (error) {
+      console.error("Error exporting CSV:", error);
+      res.status(500).json({ error: "Lỗi khi xuất file CSV" });
+    }
+  });
+
+  // Export statistics report as text
+  app.get("/api/export/report", async (_req, res) => {
+    try {
+      const feedbacks = await storage.getAllFeedbacks();
+      const report = generateStatisticsReport(feedbacks);
+      
+      res.setHeader("Content-Type", "text/plain; charset=utf-8");
+      res.setHeader("Content-Disposition", `attachment; filename="bao-cao-${new Date().toISOString().split('T')[0]}.txt"`);
+      
+      res.send(report);
+    } catch (error) {
+      console.error("Error exporting report:", error);
+      res.status(500).json({ error: "Lỗi khi xuất báo cáo" });
     }
   });
 
