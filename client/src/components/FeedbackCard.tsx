@@ -10,12 +10,13 @@ import {
 } from "@/components/ui/select";
 import { formatDistanceToNow } from "date-fns";
 import { vi } from "date-fns/locale";
-import { Building2, Calendar, User, Trash2, Edit, Hash, Star, MessageSquare } from "lucide-react";
+import { Building2, Calendar, User, Trash2, Edit, Hash, Star, MessageSquare, CheckCircle } from "lucide-react";
 import type { Feedback } from "@shared/schema";
 import { Status, STATUS_OPTIONS } from "@shared/schema";
 import AssigneeInput from "./AssigneeInput";
 import { Button } from "@/components/ui/button";
 import ReviewDialog from "./ReviewDialog";
+import MarkResolvedDialog from "./MarkResolvedDialog";
 
 interface FeedbackCardProps {
   feedback: Feedback;
@@ -67,6 +68,7 @@ export default function FeedbackCard({
   isAdminMode,
 }: FeedbackCardProps) {
   const [isReviewDialogOpen, setIsReviewDialogOpen] = useState(false);
+  const [isMarkResolvedDialogOpen, setIsMarkResolvedDialogOpen] = useState(false);
   
   const timeAgo = formatDistanceToNow(new Date(feedback.submittedAt), {
     addSuffix: true,
@@ -76,6 +78,7 @@ export default function FeedbackCard({
   const feedbackStatus = feedback.status as Status;
   const hasRating = feedback.rating !== null && feedback.rating !== undefined;
   const canReview = feedbackStatus === Status.Resolved && !hasRating;
+  const canMarkResolved = feedbackStatus === Status.Processing;
 
   return (
     <Card className={`hover-elevate transition-all ${getStatusCardClass(feedbackStatus)}`} data-testid={`feedback-card-${feedback.id}`}>
@@ -195,18 +198,35 @@ export default function FeedbackCard({
           {getStatusLabel(feedbackStatus)}
         </Badge>
 
-        {/* Review Button for Public Users */}
-        {!isAdminMode && canReview && (
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setIsReviewDialogOpen(true)}
-            data-testid={`button-review-${feedback.id}`}
-            className="ml-auto"
-          >
-            <Star className="w-4 h-4 mr-2" />
-            Đánh giá
-          </Button>
+        {/* Public User Actions */}
+        {!isAdminMode && (
+          <div className="flex flex-wrap items-center gap-2 ml-auto">
+            {/* Mark as Resolved Button - Only show when processing */}
+            {canMarkResolved && (
+              <Button
+                variant="default"
+                size="sm"
+                onClick={() => setIsMarkResolvedDialogOpen(true)}
+                data-testid={`button-mark-resolved-${feedback.id}`}
+              >
+                <CheckCircle className="w-4 h-4 mr-2" />
+                Đã xử lý
+              </Button>
+            )}
+            
+            {/* Review Button - Only show when resolved and no rating */}
+            {canReview && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setIsReviewDialogOpen(true)}
+                data-testid={`button-review-${feedback.id}`}
+              >
+                <Star className="w-4 h-4 mr-2" />
+                Đánh giá
+              </Button>
+            )}
+          </div>
         )}
 
         {isAdminMode && (
@@ -266,6 +286,14 @@ export default function FeedbackCard({
         onSuccess={() => {
           onReviewSubmit?.();
         }}
+      />
+
+      {/* Mark Resolved Dialog */}
+      <MarkResolvedDialog
+        feedbackId={feedback.id}
+        trackingNumber={feedback.trackingNumber}
+        isOpen={isMarkResolvedDialogOpen}
+        onClose={() => setIsMarkResolvedDialogOpen(false)}
       />
     </Card>
   );

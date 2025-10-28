@@ -297,6 +297,62 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Mark feedback as resolved (with password verification)
+  app.post("/api/feedbacks/:id/mark-resolved", async (req, res) => {
+    try {
+      const { password } = req.body;
+
+      if (!password || typeof password !== 'string') {
+        return res.status(400).json({ error: "Vui lòng nhập mật khẩu" });
+      }
+
+      // Verify password
+      const trimmedPassword = password.trim();
+      const isValid = verifyAdminPassword(trimmedPassword);
+
+      if (!isValid) {
+        return res.status(401).json({ error: "Mật khẩu không đúng" });
+      }
+
+      // Get current feedback to check status
+      const currentFeedback = await storage.getFeedback(req.params.id);
+      if (!currentFeedback) {
+        return res.status(404).json({ error: "Không tìm thấy kiến nghị" });
+      }
+
+      // Only allow marking as resolved if currently processing
+      if (currentFeedback.status !== Status.Processing) {
+        return res.status(400).json({ error: "Chỉ có thể đánh dấu 'Đã giải quyết' cho kiến nghị đang xử lý" });
+      }
+
+      // Update status to resolved
+      const success = await storage.updateFeedbackStatus(req.params.id, Status.Resolved);
+
+      if (!success) {
+        return res.status(404).json({ error: "Không tìm thấy kiến nghị" });
+      }
+
+      // Get updated feedback for notification
+      const feedback = await storage.getFeedback(req.params.id);
+      if (feedback) {
+        // Send Telegram notification about status change (non-blocking)
+        sendStatusUpdateNotification(
+          feedback.trackingNumber,
+          feedback.title,
+          feedback.unitName,
+          Status.Resolved
+        ).catch(err => {
+          console.error("Failed to send Telegram notification, but status was updated:", err);
+        });
+      }
+
+      res.json({ success: true });
+    } catch (error: any) {
+      console.error("Error marking feedback as resolved:", error);
+      res.status(500).json({ error: "Không thể cập nhật trạng thái" });
+    }
+  });
+
   // Export feedbacks as CSV
   app.get("/api/export/csv", async (_req, res) => {
     try {
