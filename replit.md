@@ -119,8 +119,9 @@ interface Feedback {
 ### API Endpoints
 - `GET /api/feedbacks` - List all feedback
 - `POST /api/feedbacks` - Create new feedback
-- `PATCH /api/feedbacks/:id/status` - Update status
-- `PATCH /api/feedbacks/:id/assign` - Assign to staff (auto-updates status to "processing")
+- `PATCH /api/feedbacks/:id/status` - Update status (admin only)
+- `PATCH /api/feedbacks/:id/assign` - Assign to staff (admin only, auto-updates status to "processing")
+- `POST /api/feedbacks/:id/mark-resolved` - Mark as resolved (requires password verification)
 - `POST /api/feedbacks/:id/review` - Submit rating (requires contactPhone verification)
 - `POST /api/admin/login` - Admin authentication
 
@@ -133,7 +134,18 @@ The application follows a professional Vietnamese government aesthetic with:
 - Subtle shadows and smooth transitions
 
 ## Recent Changes
-- October 28, 2025 (Latest): Enhanced Telegram notification format and rating system
+- October 28, 2025 (Latest): Public "Mark as Resolved" feature with password verification
+  - **Public Mark as Resolved**: Anyone can mark feedback as resolved with password
+    - Button "Đã xử lý" appears on processing feedbacks (public view)
+    - Requires password verification (ADMIN_PASSWORD)
+    - Only works when status = "processing"
+    - Automatically sends Telegram notification
+    - Non-blocking notification (doesn't fail if Telegram unavailable)
+  - **Improved Markdown Escaping**: All Telegram notifications properly escape special characters
+    - Prevents "can't parse entities" errors
+    - Applied to all user-provided fields (unit name, title, description, assignee name)
+
+- October 28, 2025: Enhanced Telegram notification format and rating system
   - **Improved Telegram New Feedback Notification**: Complete format with all details
     - Header: "🔔 Thông báo yêu cầu hỗ trợ mới"
     - Displays: Tracking number, Department, Title, Full description
