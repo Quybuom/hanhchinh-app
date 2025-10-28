@@ -16,14 +16,26 @@ This application enables government departments to submit, track, and manage fee
 
 ## Technical Stack
 - **Frontend**: React 19, TypeScript, TanStack Query, Wouter, Shadcn UI
-- **Backend**: Express.js, TypeScript, In-memory storage
+- **Backend**: Express.js, TypeScript, PostgreSQL database (Neon)
+- **Database**: Drizzle ORM with PostgreSQL for persistent storage
 - **AI**: Google Gemini 2.5 Flash for notification generation
+- **Notifications**: Telegram Bot API for real-time notifications (optional)
 - **Styling**: Tailwind CSS with custom design system
 
 ## Environment Variables
 Required secrets (configured in Replit Secrets):
 - `GEMINI_API_KEY`: Google Gemini API key for AI notifications
 - `ADMIN_PASSWORD`: Secure password for admin authentication
+- `TELEGRAM_BOT_TOKEN`: Telegram Bot API token (optional - for real-time Telegram notifications)
+- `TELEGRAM_CHAT_ID`: Telegram Chat ID to receive notifications (optional - required if TELEGRAM_BOT_TOKEN is set)
+
+### Setting up Telegram Notifications (Optional)
+1. Create a Telegram bot by talking to @BotFather on Telegram
+2. Copy the bot token to TELEGRAM_BOT_TOKEN secret
+3. Start a chat with your bot and send a message
+4. Get your chat ID by visiting: `https://api.telegram.org/bot<YOUR_BOT_TOKEN>/getUpdates`
+5. Copy the chat ID to TELEGRAM_CHAT_ID secret
+6. Restart the application to enable Telegram notifications
 
 ## Running the Application
 The application runs automatically via the "Start application" workflow which executes `npm run dev`. The server runs on port 5000.
@@ -88,12 +100,13 @@ The application follows a professional Vietnamese government aesthetic with:
 - Subtle shadows and smooth transitions
 
 ## Recent Changes
-- October 28, 2025: Initial deployment
-  - Complete feedback management system
-  - AI-powered notifications with Gemini
+- October 28, 2025: Production deployment with enhanced features
+  - Complete feedback management system with persistent PostgreSQL database
+  - AI-powered notification messages with Gemini
+  - Real-time Telegram Bot notifications (optional feature)
   - Secure server-side authentication
-  - Empty initial state (production-ready)
   - Vietnamese language UI throughout
+  - Professional government aesthetic design
 
 ## Next Steps
 To deploy this application live on Replit:
