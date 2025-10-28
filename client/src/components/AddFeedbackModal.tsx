@@ -47,6 +47,8 @@ export default function AddFeedbackModal({
       title: "",
       description: "",
       imageUrl: "",
+      contactName: "",
+      contactPhone: "",
     },
   });
 
@@ -106,6 +108,8 @@ export default function AddFeedbackModal({
         title: data.title,
         description: data.description,
         imageUrl: uploadedImageUrl || null,
+        contactName: data.contactName,
+        contactPhone: data.contactPhone,
       });
       form.reset();
       setSelectedFile(null);
@@ -147,6 +151,46 @@ export default function AddFeedbackModal({
                 </FormItem>
               )}
             />
+
+            <div className="space-y-4 p-4 rounded-md border border-card-border bg-muted/30">
+              <h3 className="text-sm font-semibold text-foreground">Thông tin liên hệ</h3>
+              
+              <FormField
+                control={form.control}
+                name="contactName"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Họ và tên</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="Ví dụ: Nguyễn Văn A"
+                        data-testid="input-contact-name"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="contactPhone"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Số điện thoại</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="Ví dụ: 0987654321"
+                        data-testid="input-contact-phone"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
 
             <FormField
               control={form.control}
