@@ -82,7 +82,8 @@ export default function Home() {
   const handleAuthenticate = async (password: string): Promise<boolean> => {
     try {
       const response = await apiRequest("POST", "/api/admin/login", { password });
-      if (response && typeof response === 'object' && 'success' in response) {
+      const data = await response.json();
+      if (data && data.success) {
         setAdminMode(true);
         setAuthModalOpen(false);
         return true;
