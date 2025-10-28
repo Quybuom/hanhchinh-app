@@ -124,16 +124,17 @@ export default function AddFeedbackModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-2xl" data-testid="modal-add-feedback">
+      <DialogContent className="sm:max-w-2xl max-h-[90vh] flex flex-col" data-testid="modal-add-feedback">
         <DialogHeader>
-          <DialogTitle>Gửi phản ánh mới</DialogTitle>
+          <DialogTitle>Gửi yêu cầu hỗ trợ</DialogTitle>
           <DialogDescription>
-            Điền thông tin phản ánh của bạn vào biểu mẫu dưới đây
+            Điền thông tin yêu cầu hỗ trợ của bạn vào biểu mẫu dưới đây
           </DialogDescription>
         </DialogHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
+          <form onSubmit={form.handleSubmit(handleSubmit)} className="flex flex-col flex-1 overflow-hidden">
+            <div className="space-y-6 overflow-y-auto pr-2 flex-1">
             <FormField
               control={form.control}
               name="unitName"
@@ -283,8 +284,9 @@ export default function AddFeedbackModal({
                 </div>
               )}
             </div>
+            </div>
 
-            <DialogFooter>
+            <DialogFooter className="mt-6">
               <Button
                 type="button"
                 variant="outline"
@@ -296,7 +298,7 @@ export default function AddFeedbackModal({
               </Button>
               <Button type="submit" disabled={isSubmitting || isUploading} data-testid="button-submit">
                 {isSubmitting && <Loader2 className="mr-2 w-4 h-4 animate-spin" />}
-                Gửi phản ánh
+                GỬI YÊU CẦU HỖ TRỢ
               </Button>
             </DialogFooter>
           </form>
