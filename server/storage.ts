@@ -9,7 +9,7 @@ export interface IStorage {
   createFeedback(feedback: InsertFeedback): Promise<Feedback>;
   updateFeedback(id: string, data: Partial<InsertFeedback>): Promise<Feedback | undefined>;
   updateFeedbackStatus(id: string, status: Status): Promise<Feedback | undefined>;
-  assignFeedback(id: string, assignee: string | null): Promise<Feedback | undefined>;
+  assignFeedback(id: string, assignee: string | null, assigneePhone?: string | null): Promise<Feedback | undefined>;
   deleteFeedback(id: string): Promise<boolean>;
   submitReview(id: string, rating: number, reviewComment: string | undefined, contactPhone: string): Promise<Feedback | undefined>;
   
@@ -69,8 +69,11 @@ export class DatabaseStorage implements IStorage {
     return feedback || undefined;
   }
 
-  async assignFeedback(id: string, assignee: string | null): Promise<Feedback | undefined> {
-    const updateData: { assignee: string | null; status?: Status } = { assignee };
+  async assignFeedback(id: string, assignee: string | null, assigneePhone?: string | null): Promise<Feedback | undefined> {
+    const updateData: { assignee: string | null; assigneePhone?: string | null; status?: Status } = { 
+      assignee,
+      assigneePhone: assigneePhone || null,
+    };
     
     // Automatically change status to "processing" when assigning to someone
     if (assignee !== null) {

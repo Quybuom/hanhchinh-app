@@ -143,17 +143,28 @@ export default function FeedbackCard({
               </span>
             </div>
           </div>
-          {feedback.assignee && (
-            <div className="flex items-start gap-2">
-              <User className="w-4 h-4 mt-0.5 text-primary" />
-              <div>
-                <span className="font-medium text-foreground">Cán bộ xử lý:</span>
-                <span className="ml-1 text-muted-foreground" data-testid={`feedback-assignee-detail-${feedback.id}`}>
-                  {feedback.assignee}
+          <div className="flex items-start gap-2">
+            <User className="w-4 h-4 mt-0.5 text-primary" />
+            <div>
+              <span className="font-medium text-foreground">Cán bộ xử lý:</span>
+              {feedback.assignee ? (
+                <div className="ml-1">
+                  <span className="text-muted-foreground" data-testid={`feedback-assignee-detail-${feedback.id}`}>
+                    {feedback.assignee}
+                  </span>
+                  {feedback.assigneePhone && (
+                    <span className="ml-2 text-primary font-medium" data-testid={`feedback-assignee-phone-${feedback.id}`}>
+                      ({feedback.assigneePhone})
+                    </span>
+                  )}
+                </div>
+              ) : (
+                <span className="ml-1 text-amber-600 dark:text-amber-400 font-medium" data-testid={`feedback-unassigned-${feedback.id}`}>
+                  Chưa phân công
                 </span>
-              </div>
+              )}
             </div>
-          )}
+          </div>
         </div>
 
         {/* Rating Display */}

@@ -124,12 +124,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       try {
         const staff = await storage.findStaffByUnitName(feedback.unitName);
         if (staff) {
-          // Auto-assign to the responsible staff
-          const updatedFeedback = await storage.assignFeedback(feedback.id, staff.name);
+          // Auto-assign to the responsible staff with phone number
+          const updatedFeedback = await storage.assignFeedback(feedback.id, staff.name, staff.phone);
           if (updatedFeedback) {
             feedback = updatedFeedback;
             autoAssignedStaff = staff;
-            console.log(`Auto-assigned feedback #${feedback.trackingNumber} to staff: ${staff.name}`);
+            console.log(`Auto-assigned feedback #${feedback.trackingNumber} to staff: ${staff.name} (${staff.phone || 'no phone'})`);
           }
         }
       } catch (error) {
@@ -219,9 +219,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: error.message });
       }
 
+      // Find staff phone if assignee name is provided
+      let assigneePhone: string | null = null;
+      if (validationResult.data.assignee) {
+        try {
+          const allStaff = await storage.listStaff();
+          const matchedStaff = allStaff.find(s => s.name === validationResult.data.assignee);
+          if (matchedStaff) {
+            assigneePhone = matchedStaff.phone || null;
+          }
+        } catch (error) {
+          console.error("Error finding staff phone:", error);
+        }
+      }
+
       const feedback = await storage.assignFeedback(
         req.params.id,
-        validationResult.data.assignee
+        validationResult.data.assignee,
+        assigneePhone
       );
 
       if (!feedback) {

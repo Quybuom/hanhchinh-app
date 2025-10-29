@@ -21,6 +21,7 @@ export const feedbacks = pgTable("feedbacks", {
   submittedAt: timestamp("submitted_at").notNull().defaultNow(),
   status: text("status").notNull().default(Status.Received),
   assignee: text("assignee"),
+  assigneePhone: text("assignee_phone"),
   rating: integer("rating"),
   reviewComment: text("review_comment"),
 });
