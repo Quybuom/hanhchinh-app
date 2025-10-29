@@ -93,7 +93,7 @@ export default function Header({
                 data-testid="button-admin-login"
               >
                 <LogIn className="w-4 h-4" />
-                <span>Đăng nhập</span>
+                <span>Quản trị</span>
               </Button>
             )}
           </div>

@@ -1,5 +1,6 @@
 import { useState, useCallback } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
+import { useLocation } from "wouter";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import type { Feedback, InsertFeedback } from "@shared/schema";
 import { Status } from "@shared/schema";
@@ -15,6 +16,7 @@ import AdminAuthModal from "@/components/AdminAuthModal";
 import { Loader2 } from "lucide-react";
 
 export default function Home() {
+  const [, navigate] = useLocation();
   const [isAddModalOpen, setAddModalOpen] = useState(false);
   const [isEditModalOpen, setEditModalOpen] = useState(false);
   const [selectedFeedback, setSelectedFeedback] = useState<Feedback | null>(null);
@@ -180,7 +182,7 @@ export default function Home() {
         onAddFeedback={() => setAddModalOpen(true)}
         onShowReport={() => setReportModalOpen(true)}
         onShowStaffManagement={() => setStaffManagementOpen(true)}
-        onAdminLoginClick={() => setAuthModalOpen(true)}
+        onAdminLoginClick={() => navigate("/login")}
         onAdminLogout={handleAdminLogout}
         isAdminMode={isAdminMode}
       />

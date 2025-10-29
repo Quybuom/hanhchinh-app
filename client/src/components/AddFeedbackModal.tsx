@@ -145,7 +145,7 @@ export default function AddFeedbackModal({
                   </FormLabel>
                   <FormControl>
                     <Input
-                      placeholder="Ví dụ: UBND xã Quế Võ, UBND phường Đông Ngàn"
+                      placeholder="Xã Biên Sơn, Phường Kinh Bắc"
                       data-testid="input-unit-name"
                       {...field}
                     />
@@ -158,45 +158,47 @@ export default function AddFeedbackModal({
             <div className="space-y-4 p-4 rounded-md border border-card-border bg-muted/30">
               <h3 className="text-sm font-semibold text-foreground">Thông tin liên hệ</h3>
               
-              <FormField
-                control={form.control}
-                name="contactName"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>
-                      Họ và tên <span className="text-destructive">*</span>
-                    </FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder="Ví dụ: Nguyễn Văn A"
-                        data-testid="input-contact-name"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="contactName"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>
+                        Họ và tên <span className="text-destructive">*</span>
+                      </FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="Ví dụ: Nguyễn Văn A"
+                          data-testid="input-contact-name"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-              <FormField
-                control={form.control}
-                name="contactPhone"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>
-                      Số điện thoại <span className="text-destructive">*</span>
-                    </FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder="Ví dụ: 0987654321"
-                        data-testid="input-contact-phone"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+                <FormField
+                  control={form.control}
+                  name="contactPhone"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>
+                        Số điện thoại <span className="text-destructive">*</span>
+                      </FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="Ví dụ: 0987654321"
+                          data-testid="input-contact-phone"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
             </div>
 
             <FormField
