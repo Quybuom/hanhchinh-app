@@ -76,20 +76,24 @@ export default function Header({
             {isAdminMode ? (
               <Button
                 onClick={onAdminLogout}
-                variant="ghost"
-                size="icon"
+                variant="outline"
+                size="default"
+                className="gap-2"
                 data-testid="button-admin-logout"
               >
                 <LogOut className="w-4 h-4" />
+                <span className="hidden sm:inline">Đăng xuất</span>
               </Button>
             ) : (
               <Button
                 onClick={onAdminLoginClick}
-                variant="ghost"
-                size="icon"
+                variant="secondary"
+                size="default"
+                className="gap-2"
                 data-testid="button-admin-login"
               >
                 <LogIn className="w-4 h-4" />
+                <span>Đăng nhập</span>
               </Button>
             )}
           </div>
