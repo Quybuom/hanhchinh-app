@@ -6,7 +6,7 @@ import { z } from "zod";
 import { fromZodError } from "zod-validation-error";
 import { generateTelegramNotification } from "./services/gemini";
 import { sendTelegramNotification, sendStatusUpdateNotification, sendAssigneeNotification } from "./services/telegram";
-import { verifyAdminPassword } from "./services/auth";
+import { verifyAdminPassword, verifyPassword } from "./services/auth";
 import { upload, getFileUrl } from "./upload";
 import { generateCSV, generateStatisticsReport } from "./services/export";
 import path from "path";
@@ -75,11 +75,69 @@ export async function registerRoutes(app: Express): Promise<Server> {
         res.json({ success: true });
       } else {
         console.log("Login failed: Invalid password");
-        res.status(401).json({ error: "Invalid password" });
+        res.status(401).json({ error: "Mật khẩu không chính xác" });
       }
     } catch (error) {
       console.error("Error during admin login:", error);
       res.status(500).json({ error: "Authentication failed" });
+    }
+  });
+
+  // Staff authentication
+  app.post("/api/staff/login", async (req, res) => {
+    try {
+      const loginSchema = z.object({
+        username: z.string().min(1, "Tên đăng nhập không được để trống"),
+        password: z.string().min(1, "Mật khẩu không được để trống"),
+      });
+
+      const validationResult = loginSchema.safeParse(req.body);
+      if (!validationResult.success) {
+        const error = fromZodError(validationResult.error);
+        return res.status(400).json({ error: error.message });
+      }
+
+      const { username, password } = validationResult.data;
+
+      // Find staff by username
+      const staffMember = await storage.getStaffByUsername(username.trim());
+      if (!staffMember) {
+        return res.status(401).json({ error: "Tên đăng nhập hoặc mật khẩu không chính xác" });
+      }
+
+      // Check if staff is active
+      if (!staffMember.active) {
+        return res.status(403).json({ error: "Tài khoản đã bị vô hiệu hóa" });
+      }
+
+      // Verify password
+      if (!staffMember.passwordHash) {
+        return res.status(401).json({ error: "Tài khoản chưa được thiết lập mật khẩu" });
+      }
+
+      const isValidPassword = await verifyPassword(password, staffMember.passwordHash);
+      if (!isValidPassword) {
+        return res.status(401).json({ error: "Tên đăng nhập hoặc mật khẩu không chính xác" });
+      }
+
+      console.log(`Staff login successful: ${staffMember.name} (${username})`);
+      
+      // Set session for authentication
+      req.session.staffId = staffMember.id;
+      
+      // Return staff info (without password hash)
+      res.json({
+        success: true,
+        staff: {
+          id: staffMember.id,
+          name: staffMember.name,
+          phone: staffMember.phone,
+          username: staffMember.username,
+        },
+      });
+    } catch (error) {
+      console.error("Error during staff login:", error);
+      res.status(500).json({ error: "Đăng nhập thất bại" });
     }
   });
 
@@ -441,6 +499,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get feedbacks for a specific staff member (scoped endpoint for security)
+  app.get("/api/staff/:id/feedbacks", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ error: "ID không hợp lệ" });
+      }
+
+      // CRITICAL: Verify authentication and authorization BEFORE database query
+      if (!req.session.staffId) {
+        return res.status(401).json({ error: "Chưa đăng nhập" });
+      }
+
+      if (req.session.staffId !== id) {
+        console.warn(`Authorization failed: staff ${req.session.staffId} attempted to access feedbacks for staff ${id}`);
+        return res.status(403).json({ error: "Không có quyền truy cập phản ánh của cán bộ khác" });
+      }
+
+      // Only fetch data after authorization succeeds
+      const feedbacks = await storage.getStaffFeedbacks(id);
+      res.json(feedbacks);
+    } catch (error) {
+      console.error("Error fetching staff feedbacks:", error);
+      res.status(500).json({ error: "Không thể tải danh sách phản ánh" });
+    }
+  });
+
   // Get single staff
   app.get("/api/staff/:id", async (req, res) => {
     try {
@@ -583,6 +668,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error creating unit:", error);
       res.status(500).json({ error: "Không thể tạo địa bàn mới" });
+    }
+  });
+
+  // Bulk create units
+  app.post("/api/units/bulk", async (req, res) => {
+    try {
+      const bulkSchema = z.object({
+        unitNames: z.array(z.string()).min(1, "Cần ít nhất một tên địa bàn"),
+      });
+
+      const validationResult = bulkSchema.safeParse(req.body);
+      if (!validationResult.success) {
+        const error = fromZodError(validationResult.error);
+        return res.status(400).json({ error: error.message });
+      }
+
+      const unitsList = await storage.createUnits(validationResult.data.unitNames);
+      res.json({ 
+        units: unitsList,
+        count: unitsList.length,
+        message: `Đã tạo ${unitsList.length} địa bàn mới`
+      });
+    } catch (error) {
+      console.error("Error bulk creating units:", error);
+      res.status(500).json({ error: "Không thể tạo địa bàn" });
     }
   });
 

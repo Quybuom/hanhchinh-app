@@ -11,10 +11,11 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Edit, Trash2, UserPlus, Users, MapPin, Loader2 } from "lucide-react";
+import { Plus, Edit, Trash2, UserPlus, Users, MapPin, Loader2, FileText } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import {
   AlertDialog,
@@ -47,6 +48,8 @@ export default function StaffManagementModal({ isOpen, onClose }: StaffManagemen
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<{ type: "staff" | "unit"; id: number } | null>(null);
   const [selectedStaffForAssignment, setSelectedStaffForAssignment] = useState<number | null>(null);
+  const [showBulkImport, setShowBulkImport] = useState(false);
+  const [bulkUnitsText, setBulkUnitsText] = useState("");
 
   // Queries
   const { data: staffList = [], isLoading: loadingStaff } = useQuery<Staff[]>({
@@ -127,6 +130,25 @@ export default function StaffManagementModal({ isOpen, onClose }: StaffManagemen
     },
     onError: () => {
       toast({ title: "Lỗi", description: "Không thể thêm địa bàn", variant: "destructive" });
+    },
+  });
+
+  const bulkCreateUnitsMutation = useMutation({
+    mutationFn: async (unitNames: string[]) => {
+      const response = await apiRequest("POST", "/api/units/bulk", { unitNames });
+      return await response.json();
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/units"] });
+      toast({ 
+        title: "Thành công", 
+        description: `Đã tạo ${data.count} địa bàn mới` 
+      });
+      setBulkUnitsText("");
+      setShowBulkImport(false);
+    },
+    onError: () => {
+      toast({ title: "Lỗi", description: "Không thể tạo địa bàn", variant: "destructive" });
     },
   });
 
@@ -231,6 +253,20 @@ export default function StaffManagementModal({ isOpen, onClose }: StaffManagemen
     }
   };
 
+  const handleBulkImport = () => {
+    const unitNames = bulkUnitsText
+      .split("\n")
+      .map(line => line.trim())
+      .filter(line => line.length > 0);
+
+    if (unitNames.length === 0) {
+      toast({ title: "Lỗi", description: "Vui lòng nhập ít nhất một địa bàn", variant: "destructive" });
+      return;
+    }
+
+    bulkCreateUnitsMutation.mutate(unitNames);
+  };
+
   return (
     <>
       <Dialog open={isOpen} onOpenChange={onClose}>
@@ -263,7 +299,7 @@ export default function StaffManagementModal({ isOpen, onClose }: StaffManagemen
               <div className="flex justify-between items-center">
                 <h3 className="text-lg font-semibold">Danh sách cán bộ</h3>
                 <Button
-                  onClick={() => setEditingStaff({ id: 0, name: "", phone: "", active: true })}
+                  onClick={() => setEditingStaff({ id: 0, name: "", phone: null, username: null, passwordHash: null, active: true })}
                   data-testid="button-add-staff"
                 >
                   <Plus className="w-4 h-4 mr-2" />
@@ -375,14 +411,65 @@ export default function StaffManagementModal({ isOpen, onClose }: StaffManagemen
             <TabsContent value="units" className="space-y-4">
               <div className="flex justify-between items-center">
                 <h3 className="text-lg font-semibold">Danh sách địa bàn</h3>
-                <Button
-                  onClick={() => setEditingUnit({ id: 0, name: "", code: "", parentUnitId: null })}
-                  data-testid="button-add-unit"
-                >
-                  <Plus className="w-4 h-4 mr-2" />
-                  Thêm địa bàn
-                </Button>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    onClick={() => setShowBulkImport(!showBulkImport)}
+                    data-testid="button-bulk-import"
+                  >
+                    <FileText className="w-4 h-4 mr-2" />
+                    Nhập nhiều
+                  </Button>
+                  <Button
+                    onClick={() => setEditingUnit({ id: 0, name: "", code: "", parentUnitId: null })}
+                    data-testid="button-add-unit"
+                  >
+                    <Plus className="w-4 h-4 mr-2" />
+                    Thêm địa bàn
+                  </Button>
+                </div>
               </div>
+
+              {/* Bulk Import Section */}
+              {showBulkImport && (
+                <Card className="border-primary">
+                  <CardHeader>
+                    <CardTitle className="text-base">Nhập nhiều địa bàn cùng lúc</CardTitle>
+                    <CardDescription>
+                      Nhập tên các địa bàn, mỗi dòng một địa bàn. Mã số sẽ được tự động tạo.
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <Textarea
+                      placeholder={"UBND xã Đại Đồng\nUBND xã Phương Liễu\nUBND phường Đông Ngàn\n..."}
+                      className="min-h-48"
+                      value={bulkUnitsText}
+                      onChange={(e) => setBulkUnitsText(e.target.value)}
+                      data-testid="textarea-bulk-units"
+                    />
+                  </CardContent>
+                  <CardFooter className="flex gap-2">
+                    <Button 
+                      onClick={handleBulkImport} 
+                      disabled={bulkCreateUnitsMutation.isPending}
+                      data-testid="button-submit-bulk"
+                    >
+                      {bulkCreateUnitsMutation.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                      Tạo địa bàn
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        setShowBulkImport(false);
+                        setBulkUnitsText("");
+                      }}
+                      data-testid="button-cancel-bulk"
+                    >
+                      Hủy
+                    </Button>
+                  </CardFooter>
+                </Card>
+              )}
 
               {loadingUnits ? (
                 <div className="flex justify-center py-8">

@@ -1,8 +1,33 @@
 import express, { type Request, Response, NextFunction } from "express";
+import session from "express-session";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 
 const app = express();
+
+// Session configuration for staff authentication
+if (!process.env.SESSION_SECRET) {
+  console.warn("WARNING: SESSION_SECRET not set. Using insecure fallback for development only.");
+}
+
+app.use(session({
+  secret: process.env.SESSION_SECRET || "dev-only-insecure-secret-change-for-production",
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    secure: process.env.NODE_ENV === "production",
+    httpOnly: true,
+    sameSite: "lax",
+    maxAge: 24 * 60 * 60 * 1000, // 24 hours
+  },
+}));
+
+// Extend Express session to include staff ID
+declare module 'express-session' {
+  interface SessionData {
+    staffId?: number;
+  }
+}
 
 declare module 'http' {
   interface IncomingMessage {

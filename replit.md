@@ -21,9 +21,16 @@ The system is built as a full-stack application with a clear separation of conce
 **Technical Implementations & Feature Specifications:**
 - **Public Feedback Submission**: Users can submit feedback with department name, title, description, contact information (name and 10-11 digit phone number), and optional images (max 5MB). Each submission receives a unique sequential tracking number.
 - **Admin Dashboard**: Secure admin access for viewing reports, updating feedback status (Received → Processing → Resolved), assigning feedback to staff (with flexible assignment, search, and custom names), and managing staff and geographic units.
+- **Staff Authentication System**: Session-based authentication for staff members with individual login credentials (username/password). Staff can only access feedbacks assigned to them through a secure scoped endpoint. Features include:
+  - Staff login with bcrypt-hashed passwords
+  - express-session with httpOnly, sameSite cookies
+  - Session-based authorization (401 for unauthenticated, 403 for unauthorized)
+  - Staff dashboard showing only assigned feedbacks with statistics
+  - Status update capabilities (mark as resolved, reopen)
+  - Confirmation dialogs for status changes
 - **AI Notifications**: Google Gemini generates contextual Vietnamese notification messages, including tracking numbers and assignment details.
 - **Statistics & Reporting**: Real-time statistics with percentage breakdowns, assignee workload tracking, resolution rates per assignee, and CSV/text data export functionality.
-- **Staff Management System**: Full CRUD (Create, Read, Update, Delete) functionality for staff members and geographic units via an admin UI with "Cán bộ", "Địa bàn", and "Phân công" tabs.
+- **Staff Management System**: Full CRUD (Create, Read, Update, Delete) functionality for staff members and geographic units via an admin UI with "Cán bộ", "Địa bàn", and "Phân công" tabs. Admin can set username/password for staff members to enable individual logins.
 - **Auto-Assignment Logic**: Automatic staff assignment based on the `unitName` provided in new feedback. If a staff member is assigned to a unit, the feedback is automatically assigned to them, and its status changes to "processing". If no staff is found, the status remains "received".
 - **Public "Mark as Resolved"**: Public users can mark feedback as resolved (when in "processing" status) using the admin password for verification.
 - **Rating System**: Users can rate resolved feedback (1-5 stars) with an optional comment, after phone number verification.
@@ -35,10 +42,10 @@ The system is built as a full-stack application with a clear separation of conce
 - **Database**: PostgreSQL with Drizzle ORM for persistent storage.
 - **API Endpoints**:
     - **Feedback**: `GET /api/feedbacks`, `POST /api/feedbacks`, `PATCH /api/feedbacks/:id/status`, `PATCH /api/feedbacks/:id/assign`, `POST /api/feedbacks/:id/mark-resolved`, `POST /api/feedbacks/:id/review`, `PATCH /api/feedbacks/:id`, `DELETE /api/feedbacks/:id`.
-    - **Staff Management**: `GET /api/staff`, `GET /api/staff/:id`, `POST /api/staff`, `PATCH /api/staff/:id`, `DELETE /api/staff/:id`, `GET /api/staff/:id/units`.
+    - **Staff Management**: `GET /api/staff`, `GET /api/staff/:id`, `POST /api/staff`, `PATCH /api/staff/:id`, `DELETE /api/staff/:id`, `GET /api/staff/:id/units`, `GET /api/staff/:id/feedbacks` (session-protected).
     - **Unit Management**: `GET /api/units`, `GET /api/units/:id`, `POST /api/units`, `PATCH /api/units/:id`, `DELETE /api/units/:id`, `GET /api/units/:id/staff`.
     - **Staff-Unit Assignment**: `POST /api/staff/:staffId/units/:unitId`, `DELETE /api/staff/:staffId/units/:unitId`.
-    - **Admin**: `POST /api/admin/login`.
+    - **Authentication**: `POST /api/admin/login`, `POST /api/staff/login`.
 - **Validation**: `contactName` is required (min 1 char), `contactPhone` is required (10-11 digits, Vietnamese format).
 
 ### External Dependencies
@@ -46,3 +53,11 @@ The system is built as a full-stack application with a clear separation of conce
 - **PostgreSQL**: Database for persistent storage, hosted on Neon.
 - **Telegram Bot API**: Optional, for real-time notifications to a Telegram channel/chat.
 - **Drizzle ORM**: Used for database interaction with PostgreSQL.
+- **bcrypt**: Password hashing for staff authentication.
+- **express-session**: Session management for staff authentication.
+
+### Security Considerations
+- **Staff Authentication**: Session-based authentication with httpOnly, sameSite cookies. Staff can only access their own feedbacks via scoped endpoint with authorization checks (401/403 status codes).
+- **Password Storage**: Staff passwords hashed using bcrypt with 10 salt rounds before storage.
+- **Known MVP Limitations**: In-memory session store (single-instance only), name-based feedback assignment (requires schema migration to fully enforce uniqueness).
+- **Secrets**: SESSION_SECRET, ADMIN_PASSWORD, GEMINI_API_KEY, TELEGRAM_BOT_TOKEN stored in environment variables.

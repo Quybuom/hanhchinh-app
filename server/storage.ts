@@ -1,6 +1,7 @@
 import { feedbacks, type Feedback, type InsertFeedback, Status, staff, type Staff, type InsertStaff, units, type Unit, type InsertUnit, staffUnitAssignments, type StaffUnitAssignment } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and } from "drizzle-orm";
+import { hashPassword, verifyPassword } from "./services/auth";
 
 export interface IStorage {
   // Feedback operations
@@ -16,6 +17,8 @@ export interface IStorage {
   // Staff operations
   listStaff(): Promise<Staff[]>;
   getStaff(id: number): Promise<Staff | undefined>;
+  getStaffByUsername(username: string): Promise<Staff | undefined>;
+  getStaffFeedbacks(staffId: number): Promise<Feedback[]>;
   createStaff(staff: InsertStaff): Promise<Staff>;
   updateStaff(id: number, data: Partial<InsertStaff>): Promise<Staff | undefined>;
   deleteStaff(id: number): Promise<boolean>;
@@ -24,6 +27,7 @@ export interface IStorage {
   listUnits(): Promise<Unit[]>;
   getUnit(id: number): Promise<Unit | undefined>;
   createUnit(unit: InsertUnit): Promise<Unit>;
+  createUnits(unitNames: string[]): Promise<Unit[]>;
   updateUnit(id: number, data: Partial<InsertUnit>): Promise<Unit | undefined>;
   deleteUnit(id: number): Promise<boolean>;
   
@@ -151,21 +155,72 @@ export class DatabaseStorage implements IStorage {
     return result || undefined;
   }
 
+  async getStaffByUsername(username: string): Promise<Staff | undefined> {
+    const [result] = await db.select().from(staff).where(eq(staff.username, username));
+    return result || undefined;
+  }
+
+  async getStaffFeedbacks(staffId: number): Promise<Feedback[]> {
+    // Get staff info first to get their name
+    const staffMember = await this.getStaff(staffId);
+    if (!staffMember) {
+      return [];
+    }
+
+    // Get feedbacks assigned to this staff member
+    return await db
+      .select()
+      .from(feedbacks)
+      .where(eq(feedbacks.assignee, staffMember.name))
+      .orderBy(desc(feedbacks.submittedAt));
+  }
+
   async createStaff(insertStaff: InsertStaff): Promise<Staff> {
+    // Hash password if provided
+    let passwordHash: string | null = null;
+    if (insertStaff.password && insertStaff.password.trim().length > 0) {
+      passwordHash = await hashPassword(insertStaff.password);
+    }
+
     const [result] = await db
       .insert(staff)
       .values({
-        ...insertStaff,
+        name: insertStaff.name,
         phone: insertStaff.phone || null,
+        username: insertStaff.username || null,
+        passwordHash: passwordHash,
+        active: insertStaff.active !== undefined ? insertStaff.active : true,
       })
       .returning();
     return result;
   }
 
   async updateStaff(id: number, data: Partial<InsertStaff>): Promise<Staff | undefined> {
+    // Hash password if provided
+    let passwordHash: string | null | undefined = undefined;
+    if (data.password) {
+      if (data.password.trim().length > 0) {
+        passwordHash = await hashPassword(data.password);
+      } else {
+        passwordHash = null;
+      }
+    }
+
+    // Build update object
+    const updateData: Partial<typeof staff.$inferInsert> = {
+      name: data.name,
+      phone: data.phone !== undefined ? (data.phone || null) : undefined,
+      username: data.username !== undefined ? (data.username || null) : undefined,
+      active: data.active,
+    };
+
+    if (passwordHash !== undefined) {
+      updateData.passwordHash = passwordHash;
+    }
+
     const [result] = await db
       .update(staff)
-      .set(data)
+      .set(updateData)
       .where(eq(staff.id, id))
       .returning();
     return result || undefined;
@@ -199,6 +254,44 @@ export class DatabaseStorage implements IStorage {
       })
       .returning();
     return result;
+  }
+
+  async createUnits(unitNames: string[]): Promise<Unit[]> {
+    // Filter out empty names and duplicates
+    const cleanNames = Array.from(new Set(unitNames.filter(name => name.trim().length > 0)));
+    
+    if (cleanNames.length === 0) {
+      return [];
+    }
+
+    // Get max code number from existing units to continue sequence
+    const existingUnits = await db.select().from(units);
+    let maxCodeNumber = 0;
+    for (const unit of existingUnits) {
+      if (unit.code) {
+        const match = unit.code.match(/^DB(\d+)$/);
+        if (match) {
+          const num = parseInt(match[1]);
+          if (num > maxCodeNumber) {
+            maxCodeNumber = num;
+          }
+        }
+      }
+    }
+
+    // Create units with auto-generated codes
+    const unitsToInsert = cleanNames.map((name, index) => ({
+      name: name.trim(),
+      code: `DB${String(maxCodeNumber + index + 1).padStart(3, '0')}`, // DB001, DB002, etc.
+      parentUnitId: null,
+    }));
+
+    const results = await db
+      .insert(units)
+      .values(unitsToInsert)
+      .returning();
+    
+    return results;
   }
 
   async updateUnit(id: number, data: Partial<InsertUnit>): Promise<Unit | undefined> {

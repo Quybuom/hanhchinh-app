@@ -1,5 +1,7 @@
-// Admin authentication service
+// Authentication service for both admin and staff
 // Requires ADMIN_PASSWORD environment variable to be set
+
+import bcrypt from "bcrypt";
 
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
 
@@ -25,4 +27,15 @@ export function verifyAdminPassword(password: string): boolean {
   }
   
   return isValid;
+}
+
+// Staff authentication helpers
+const SALT_ROUNDS = 10;
+
+export async function hashPassword(password: string): Promise<string> {
+  return await bcrypt.hash(password, SALT_ROUNDS);
+}
+
+export async function verifyPassword(password: string, passwordHash: string): Promise<boolean> {
+  return await bcrypt.compare(password, passwordHash);
 }
