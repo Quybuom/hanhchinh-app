@@ -140,10 +140,12 @@ export default function AddFeedbackModal({
               name="unitName"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Tên đơn vị</FormLabel>
+                  <FormLabel>
+                    Tên đơn vị <span className="text-destructive">*</span>
+                  </FormLabel>
                   <FormControl>
                     <Input
-                      placeholder="Ví dụ: Phòng Kế hoạch - Tài chính"
+                      placeholder="Ví dụ: UBND xã Quế Võ, UBND phường Đông Ngàn"
                       data-testid="input-unit-name"
                       {...field}
                     />
@@ -161,7 +163,9 @@ export default function AddFeedbackModal({
                 name="contactName"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Họ và tên</FormLabel>
+                    <FormLabel>
+                      Họ và tên <span className="text-destructive">*</span>
+                    </FormLabel>
                     <FormControl>
                       <Input
                         placeholder="Ví dụ: Nguyễn Văn A"
@@ -179,7 +183,9 @@ export default function AddFeedbackModal({
                 name="contactPhone"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Số điện thoại</FormLabel>
+                    <FormLabel>
+                      Số điện thoại <span className="text-destructive">*</span>
+                    </FormLabel>
                     <FormControl>
                       <Input
                         placeholder="Ví dụ: 0987654321"
@@ -198,7 +204,9 @@ export default function AddFeedbackModal({
               name="title"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Tiêu đề</FormLabel>
+                  <FormLabel>
+                    Tiêu đề <span className="text-destructive">*</span>
+                  </FormLabel>
                   <FormControl>
                     <Input
                       placeholder="Tóm tắt ngắn gọn vấn đề"
@@ -216,7 +224,9 @@ export default function AddFeedbackModal({
               name="description"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Mô tả chi tiết</FormLabel>
+                  <FormLabel>
+                    Mô tả chi tiết <span className="text-destructive">*</span>
+                  </FormLabel>
                   <FormControl>
                     <Textarea
                       placeholder="Mô tả chi tiết về vấn đề hoặc đề xuất của bạn"
