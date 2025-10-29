@@ -21,16 +21,18 @@ The system is built as a full-stack application with a clear separation of conce
 **Technical Implementations & Feature Specifications:**
 - **Public Feedback Submission**: Users can submit feedback with department name, title, description, contact information (name and 10-11 digit phone number), and optional images (max 5MB). Each submission receives a unique sequential tracking number.
 - **Admin Dashboard**: Secure admin access for viewing reports, updating feedback status (Received → Processing → Resolved), assigning feedback to staff (with flexible assignment, search, and custom names), and managing staff and geographic units.
-- **Staff Authentication System**: Session-based authentication for staff members with individual login credentials (username/password). Staff can only access feedbacks assigned to them through a secure scoped endpoint. Features include:
-  - Staff login with bcrypt-hashed passwords
+- **Staff Authentication System**: Session-based authentication for staff members with simple access code login (e.g., "CB001"). Staff can only access feedbacks assigned to them through a secure scoped endpoint. Features include:
+  - Staff login with single access code (no username/password required for ease of use)
+  - Auto-generated access codes in format CB### (CB001, CB002, etc.) if not manually set
   - express-session with httpOnly, sameSite cookies
   - Session-based authorization (401 for unauthenticated, 403 for unauthorized)
   - Staff dashboard showing only assigned feedbacks with statistics
   - Status update capabilities (mark as resolved, reopen)
   - Confirmation dialogs for status changes
+  - Public display of staff phone numbers in feedback cards for citizen contact
 - **AI Notifications**: Google Gemini generates contextual Vietnamese notification messages, including tracking numbers and assignment details.
 - **Statistics & Reporting**: Real-time statistics with percentage breakdowns, assignee workload tracking, resolution rates per assignee, and CSV/text data export functionality.
-- **Staff Management System**: Full CRUD (Create, Read, Update, Delete) functionality for staff members and geographic units via an admin UI with "Cán bộ", "Địa bàn", and "Phân công" tabs. Admin can set username/password for staff members to enable individual logins.
+- **Staff Management System**: Full CRUD (Create, Read, Update, Delete) functionality for staff members and geographic units via an admin UI with "Cán bộ", "Địa bàn", and "Phân công" tabs. Admin can set access codes for staff members to enable individual logins. Staff phone numbers are publicly displayed to allow citizens to contact assigned staff directly.
 - **Auto-Assignment Logic**: Automatic staff assignment based on the `unitName` provided in new feedback. If a staff member is assigned to a unit, the feedback is automatically assigned to them, and its status changes to "processing". If no staff is found, the status remains "received".
 - **Public "Mark as Resolved"**: Public users can mark feedback as resolved (when in "processing" status) using the admin password for verification.
 - **Rating System**: Users can rate resolved feedback (1-5 stars) with an optional comment, after phone number verification.
@@ -53,11 +55,10 @@ The system is built as a full-stack application with a clear separation of conce
 - **PostgreSQL**: Database for persistent storage, hosted on Neon.
 - **Telegram Bot API**: Optional, for real-time notifications to a Telegram channel/chat.
 - **Drizzle ORM**: Used for database interaction with PostgreSQL.
-- **bcrypt**: Password hashing for staff authentication.
 - **express-session**: Session management for staff authentication.
 
 ### Security Considerations
-- **Staff Authentication**: Session-based authentication with httpOnly, sameSite cookies. Staff can only access their own feedbacks via scoped endpoint with authorization checks (401/403 status codes).
-- **Password Storage**: Staff passwords hashed using bcrypt with 10 salt rounds before storage.
-- **Known MVP Limitations**: In-memory session store (single-instance only), name-based feedback assignment (requires schema migration to fully enforce uniqueness).
+- **Staff Authentication**: Session-based authentication with httpOnly, sameSite cookies. Staff can only access their own feedbacks via scoped endpoint with authorization checks (401/403 status codes). Access codes are simple (CB###) for ease of use.
+- **Access Code Security**: Access codes are stored in plain text (staff.access_code column, unique constraint) as they are designed for convenience rather than high security. For production use with sensitive data, consider implementing additional security measures.
+- **Known MVP Limitations**: In-memory session store (single-instance only), name-based feedback assignment (requires schema migration to fully enforce uniqueness), access codes are simple and not cryptographically secure.
 - **Secrets**: SESSION_SECRET, ADMIN_PASSWORD, GEMINI_API_KEY, TELEGRAM_BOT_TOKEN stored in environment variables.
