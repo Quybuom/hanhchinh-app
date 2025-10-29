@@ -226,7 +226,9 @@ export default function StaffManagementModal({ isOpen, onClose }: StaffManagemen
     const formData = new FormData(e.currentTarget);
     const data: InsertStaff = {
       name: formData.get("name") as string,
-      phone: (formData.get("phone") as string) || "",
+      phone: (formData.get("phone") as string) || null,
+      username: (formData.get("username") as string) || null,
+      password: (formData.get("password") as string) || null,
       active: true,
     };
 
@@ -387,6 +389,38 @@ export default function StaffManagementModal({ isOpen, onClose }: StaffManagemen
                           placeholder="0123456789"
                           data-testid="input-staff-phone"
                         />
+                      </div>
+                      
+                      <div className="border-t pt-4">
+                        <p className="text-sm font-medium mb-3">Thông tin đăng nhập</p>
+                        <div className="space-y-3">
+                          <div>
+                            <Label htmlFor="staff-username">Tên đăng nhập</Label>
+                            <Input
+                              id="staff-username"
+                              name="username"
+                              defaultValue={editingStaff.username || ""}
+                              placeholder="Để trống nếu không cho phép đăng nhập"
+                              data-testid="input-staff-username"
+                            />
+                            <p className="text-xs text-muted-foreground mt-1">
+                              Tối thiểu 3 ký tự
+                            </p>
+                          </div>
+                          <div>
+                            <Label htmlFor="staff-password">Mật khẩu {editingStaff.id ? "(để trống nếu không đổi)" : ""}</Label>
+                            <Input
+                              id="staff-password"
+                              name="password"
+                              type="password"
+                              placeholder={editingStaff.id ? "Nhập mật khẩu mới nếu muốn đổi" : "Nhập mật khẩu"}
+                              data-testid="input-staff-password"
+                            />
+                            <p className="text-xs text-muted-foreground mt-1">
+                              Tối thiểu 6 ký tự
+                            </p>
+                          </div>
+                        </div>
                       </div>
                     </CardContent>
                     <CardFooter className="flex gap-2">
