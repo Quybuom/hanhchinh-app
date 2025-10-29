@@ -227,8 +227,7 @@ export default function StaffManagementModal({ isOpen, onClose }: StaffManagemen
     const data: InsertStaff = {
       name: formData.get("name") as string,
       phone: (formData.get("phone") as string) || null,
-      username: (formData.get("username") as string) || null,
-      password: (formData.get("password") as string) || null,
+      accessCode: (formData.get("accessCode") as string) || null,
       active: true,
     };
 
@@ -301,7 +300,7 @@ export default function StaffManagementModal({ isOpen, onClose }: StaffManagemen
               <div className="flex justify-between items-center">
                 <h3 className="text-lg font-semibold">Danh sách cán bộ</h3>
                 <Button
-                  onClick={() => setEditingStaff({ id: 0, name: "", phone: null, username: null, passwordHash: null, active: true })}
+                  onClick={() => setEditingStaff({ id: 0, name: "", phone: null, accessCode: null, active: true })}
                   data-testid="button-add-staff"
                 >
                   <Plus className="w-4 h-4 mr-2" />
@@ -319,8 +318,13 @@ export default function StaffManagementModal({ isOpen, onClose }: StaffManagemen
                     <Card key={staff.id} data-testid={`card-staff-${staff.id}`}>
                       <CardHeader>
                         <div className="flex justify-between items-start">
-                          <div>
+                          <div className="space-y-1">
                             <CardTitle className="text-base">{staff.name}</CardTitle>
+                            {staff.accessCode && (
+                              <div className="text-xs text-muted-foreground font-mono">
+                                Mã số: <span className="font-semibold text-foreground">{staff.accessCode}</span>
+                              </div>
+                            )}
                             {staff.phone && (
                               <CardDescription className="text-sm">
                                 SĐT: {staff.phone}
@@ -393,33 +397,19 @@ export default function StaffManagementModal({ isOpen, onClose }: StaffManagemen
                       
                       <div className="border-t pt-4">
                         <p className="text-sm font-medium mb-3">Thông tin đăng nhập</p>
-                        <div className="space-y-3">
-                          <div>
-                            <Label htmlFor="staff-username">Tên đăng nhập</Label>
-                            <Input
-                              id="staff-username"
-                              name="username"
-                              defaultValue={editingStaff.username || ""}
-                              placeholder="Để trống nếu không cho phép đăng nhập"
-                              data-testid="input-staff-username"
-                            />
-                            <p className="text-xs text-muted-foreground mt-1">
-                              Tối thiểu 3 ký tự
-                            </p>
-                          </div>
-                          <div>
-                            <Label htmlFor="staff-password">Mật khẩu {editingStaff.id ? "(để trống nếu không đổi)" : ""}</Label>
-                            <Input
-                              id="staff-password"
-                              name="password"
-                              type="password"
-                              placeholder={editingStaff.id ? "Nhập mật khẩu mới nếu muốn đổi" : "Nhập mật khẩu"}
-                              data-testid="input-staff-password"
-                            />
-                            <p className="text-xs text-muted-foreground mt-1">
-                              Tối thiểu 6 ký tự
-                            </p>
-                          </div>
+                        <div>
+                          <Label htmlFor="staff-access-code">Mã số cán bộ</Label>
+                          <Input
+                            id="staff-access-code"
+                            name="accessCode"
+                            defaultValue={editingStaff.accessCode || ""}
+                            placeholder="Ví dụ: CB001 (để trống để tự động tạo)"
+                            data-testid="input-staff-access-code"
+                            className="font-mono"
+                          />
+                          <p className="text-xs text-muted-foreground mt-1">
+                            Cán bộ sẽ dùng mã số này để đăng nhập. Để trống để hệ thống tự động tạo.
+                          </p>
                         </div>
                       </div>
                     </CardContent>

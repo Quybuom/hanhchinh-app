@@ -83,12 +83,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Staff authentication
+  // Staff authentication - chỉ cần mã số
   app.post("/api/staff/login", async (req, res) => {
     try {
       const loginSchema = z.object({
-        username: z.string().min(1, "Tên đăng nhập không được để trống"),
-        password: z.string().min(1, "Mật khẩu không được để trống"),
+        accessCode: z.string().min(1, "Vui lòng nhập mã số cán bộ"),
       });
 
       const validationResult = loginSchema.safeParse(req.body);
@@ -97,12 +96,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: error.message });
       }
 
-      const { username, password } = validationResult.data;
+      const { accessCode } = validationResult.data;
 
-      // Find staff by username
-      const staffMember = await storage.getStaffByUsername(username.trim());
+      // Find staff by access code
+      const staffMember = await storage.getStaffByAccessCode(accessCode.trim());
       if (!staffMember) {
-        return res.status(401).json({ error: "Tên đăng nhập hoặc mật khẩu không chính xác" });
+        return res.status(401).json({ error: "Mã số không chính xác" });
       }
 
       // Check if staff is active
@@ -110,29 +109,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ error: "Tài khoản đã bị vô hiệu hóa" });
       }
 
-      // Verify password
-      if (!staffMember.passwordHash) {
-        return res.status(401).json({ error: "Tài khoản chưa được thiết lập mật khẩu" });
-      }
-
-      const isValidPassword = await verifyPassword(password, staffMember.passwordHash);
-      if (!isValidPassword) {
-        return res.status(401).json({ error: "Tên đăng nhập hoặc mật khẩu không chính xác" });
-      }
-
-      console.log(`Staff login successful: ${staffMember.name} (${username})`);
+      console.log(`Staff login successful: ${staffMember.name} (${accessCode})`);
       
       // Set session for authentication
       req.session.staffId = staffMember.id;
       
-      // Return staff info (without password hash)
+      // Return staff info
       res.json({
         success: true,
         staff: {
           id: staffMember.id,
           name: staffMember.name,
           phone: staffMember.phone,
-          username: staffMember.username,
+          accessCode: staffMember.accessCode,
         },
       });
     } catch (error) {

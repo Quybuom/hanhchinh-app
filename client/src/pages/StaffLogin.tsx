@@ -9,8 +9,7 @@ import { Loader2, LogIn } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 
 export default function StaffLogin() {
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
+  const [accessCode, setAccessCode] = useState("");
   const [loading, setLoading] = useState(false);
   const [, navigate] = useLocation();
   const { toast } = useToast();
@@ -20,7 +19,7 @@ export default function StaffLogin() {
     setLoading(true);
 
     try {
-      const response = await apiRequest("POST", "/api/staff/login", { username, password });
+      const response = await apiRequest("POST", "/api/staff/login", { accessCode });
       
       if (response.ok) {
         const data = await response.json();
@@ -46,7 +45,7 @@ export default function StaffLogin() {
       
       toast({
         title: "Đăng nhập thất bại",
-        description: errorMessage || "Vui lòng kiểm tra lại thông tin đăng nhập",
+        description: errorMessage || "Vui lòng kiểm tra lại mã số",
         variant: "destructive",
       });
     } finally {
@@ -60,41 +59,30 @@ export default function StaffLogin() {
         <CardHeader className="text-center">
           <CardTitle className="text-2xl">Đăng nhập cán bộ</CardTitle>
           <CardDescription>
-            Đăng nhập để quản lý phản ánh được phân công
+            Nhập mã số cán bộ để đăng nhập
           </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleLogin} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="username">
-                Tên đăng nhập <span className="text-destructive">*</span>
+              <Label htmlFor="accessCode">
+                Mã số cán bộ <span className="text-destructive">*</span>
               </Label>
               <Input
-                id="username"
+                id="accessCode"
                 type="text"
-                placeholder="Nhập tên đăng nhập"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
+                placeholder="Ví dụ: CB001"
+                value={accessCode}
+                onChange={(e) => setAccessCode(e.target.value.toUpperCase())}
                 required
                 disabled={loading}
-                data-testid="input-staff-username"
+                autoFocus
+                data-testid="input-staff-access-code"
+                className="text-center text-lg font-mono"
               />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="password">
-                Mật khẩu <span className="text-destructive">*</span>
-              </Label>
-              <Input
-                id="password"
-                type="password"
-                placeholder="Nhập mật khẩu"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                disabled={loading}
-                data-testid="input-staff-password"
-              />
+              <p className="text-xs text-muted-foreground text-center">
+                Liên hệ admin để lấy mã số nếu chưa có
+              </p>
             </div>
 
             <Button

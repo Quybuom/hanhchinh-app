@@ -18,6 +18,7 @@ export interface IStorage {
   listStaff(): Promise<Staff[]>;
   getStaff(id: number): Promise<Staff | undefined>;
   getStaffByUsername(username: string): Promise<Staff | undefined>;
+  getStaffByAccessCode(accessCode: string): Promise<Staff | undefined>;
   getStaffFeedbacks(staffId: number): Promise<Feedback[]>;
   createStaff(staff: InsertStaff): Promise<Staff>;
   updateStaff(id: number, data: Partial<InsertStaff>): Promise<Staff | undefined>;
@@ -160,6 +161,11 @@ export class DatabaseStorage implements IStorage {
     return result || undefined;
   }
 
+  async getStaffByAccessCode(accessCode: string): Promise<Staff | undefined> {
+    const [result] = await db.select().from(staff).where(eq(staff.accessCode, accessCode));
+    return result || undefined;
+  }
+
   async getStaffFeedbacks(staffId: number): Promise<Feedback[]> {
     // Get staff info first to get their name
     const staffMember = await this.getStaff(staffId);
@@ -176,10 +182,13 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createStaff(insertStaff: InsertStaff): Promise<Staff> {
-    // Hash password if provided
-    let passwordHash: string | null = null;
-    if (insertStaff.password && insertStaff.password.trim().length > 0) {
-      passwordHash = await hashPassword(insertStaff.password);
+    // Auto-generate access code if not provided
+    let accessCode = insertStaff.accessCode;
+    if (!accessCode || accessCode.trim() === "") {
+      // Get the highest existing ID to generate next code
+      const allStaff = await db.select().from(staff).orderBy(desc(staff.id));
+      const nextId = allStaff.length > 0 ? allStaff[0].id + 1 : 1;
+      accessCode = `CB${String(nextId).padStart(3, '0')}`;
     }
 
     const [result] = await db
@@ -187,8 +196,7 @@ export class DatabaseStorage implements IStorage {
       .values({
         name: insertStaff.name,
         phone: insertStaff.phone || null,
-        username: insertStaff.username || null,
-        passwordHash: passwordHash,
+        accessCode: accessCode,
         active: insertStaff.active !== undefined ? insertStaff.active : true,
       })
       .returning();
@@ -196,27 +204,13 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateStaff(id: number, data: Partial<InsertStaff>): Promise<Staff | undefined> {
-    // Hash password if provided
-    let passwordHash: string | null | undefined = undefined;
-    if (data.password) {
-      if (data.password.trim().length > 0) {
-        passwordHash = await hashPassword(data.password);
-      } else {
-        passwordHash = null;
-      }
-    }
-
     // Build update object
     const updateData: Partial<typeof staff.$inferInsert> = {
       name: data.name,
       phone: data.phone !== undefined ? (data.phone || null) : undefined,
-      username: data.username !== undefined ? (data.username || null) : undefined,
+      accessCode: data.accessCode !== undefined ? (data.accessCode || null) : undefined,
       active: data.active,
     };
-
-    if (passwordHash !== undefined) {
-      updateData.passwordHash = passwordHash;
-    }
 
     const [result] = await db
       .update(staff)
