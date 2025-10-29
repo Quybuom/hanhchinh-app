@@ -22,10 +22,11 @@ app.use(session({
   },
 }));
 
-// Extend Express session to include staff ID
+// Extend Express session to include staff ID and admin flag
 declare module 'express-session' {
   interface SessionData {
     staffId?: number;
+    isAdmin?: boolean;
   }
 }
 

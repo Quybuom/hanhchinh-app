@@ -41,14 +41,14 @@ export default function StaffDashboard() {
   useEffect(() => {
     const staffData = localStorage.getItem("staff");
     if (!staffData) {
-      navigate("/staff/login");
+      navigate("/login");
       return;
     }
     try {
       setStaff(JSON.parse(staffData));
     } catch (error) {
       localStorage.removeItem("staff");
-      navigate("/staff/login");
+      navigate("/login");
     }
   }, [navigate]);
 
@@ -92,7 +92,7 @@ export default function StaffDashboard() {
 
   const handleLogout = () => {
     localStorage.removeItem("staff");
-    navigate("/staff/login");
+    navigate("/login");
   };
 
   const handleStatusChange = (feedbackId: string, type: "resolve" | "reopen") => {

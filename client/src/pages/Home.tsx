@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { queryClient, apiRequest } from "@/lib/queryClient";
@@ -25,6 +25,22 @@ export default function Home() {
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [isAdminMode, setAdminMode] = useState(false);
   const [isAuthModalOpen, setAuthModalOpen] = useState(false);
+
+  // Check admin session on mount
+  useEffect(() => {
+    const checkAdminSession = async () => {
+      try {
+        const response = await fetch("/api/admin/session");
+        const data = await response.json();
+        if (data.isAdmin) {
+          setAdminMode(true);
+        }
+      } catch (error) {
+        console.error("Error checking admin session:", error);
+      }
+    };
+    checkAdminSession();
+  }, []);
 
   const { data: feedbackItems = [], isLoading } = useQuery<Feedback[]>({
     queryKey: ["/api/feedbacks"],
@@ -157,8 +173,13 @@ export default function Home() {
     }
   };
 
-  const handleAdminLogout = () => {
-    setAdminMode(false);
+  const handleAdminLogout = async () => {
+    try {
+      await apiRequest("POST", "/api/admin/logout", {});
+      setAdminMode(false);
+    } catch (error) {
+      console.error("Error during logout:", error);
+    }
   };
 
   const handleReviewSubmit = useCallback(() => {

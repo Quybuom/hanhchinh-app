@@ -72,6 +72,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       if (isValid) {
         console.log("Admin login successful");
+        req.session.isAdmin = true;
         res.json({ success: true });
       } else {
         console.log("Login failed: Invalid password");
@@ -81,6 +82,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.error("Error during admin login:", error);
       res.status(500).json({ error: "Authentication failed" });
     }
+  });
+
+  // Check admin session
+  app.get("/api/admin/session", async (req, res) => {
+    res.json({ isAdmin: req.session.isAdmin === true });
+  });
+
+  // Admin logout
+  app.post("/api/admin/logout", async (req, res) => {
+    req.session.isAdmin = false;
+    req.session.destroy((err) => {
+      if (err) {
+        console.error("Error destroying session:", err);
+        return res.status(500).json({ error: "Logout failed" });
+      }
+      res.json({ success: true });
+    });
   });
 
   // Staff authentication - chỉ cần mã số
