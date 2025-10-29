@@ -9,6 +9,7 @@ import FeedbackList from "@/components/FeedbackList";
 import AddFeedbackModal from "@/components/AddFeedbackModal";
 import EditFeedbackModal from "@/components/EditFeedbackModal";
 import ReportModal from "@/components/ReportModal";
+import StaffManagementModal from "@/components/StaffManagementModal";
 import Toast from "@/components/Toast";
 import AdminAuthModal from "@/components/AdminAuthModal";
 import { Loader2 } from "lucide-react";
@@ -18,6 +19,7 @@ export default function Home() {
   const [isEditModalOpen, setEditModalOpen] = useState(false);
   const [selectedFeedback, setSelectedFeedback] = useState<Feedback | null>(null);
   const [isReportModalOpen, setReportModalOpen] = useState(false);
+  const [isStaffManagementOpen, setStaffManagementOpen] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [isAdminMode, setAdminMode] = useState(false);
   const [isAuthModalOpen, setAuthModalOpen] = useState(false);
@@ -177,6 +179,7 @@ export default function Home() {
       <Header
         onAddFeedback={() => setAddModalOpen(true)}
         onShowReport={() => setReportModalOpen(true)}
+        onShowStaffManagement={() => setStaffManagementOpen(true)}
         onAdminLoginClick={() => setAuthModalOpen(true)}
         onAdminLogout={handleAdminLogout}
         isAdminMode={isAdminMode}
@@ -216,11 +219,17 @@ export default function Home() {
       />
 
       {isAdminMode && (
-        <ReportModal
-          isOpen={isReportModalOpen}
-          onClose={() => setReportModalOpen(false)}
-          feedbackItems={feedbackItems}
-        />
+        <>
+          <ReportModal
+            isOpen={isReportModalOpen}
+            onClose={() => setReportModalOpen(false)}
+            feedbackItems={feedbackItems}
+          />
+          <StaffManagementModal
+            isOpen={isStaffManagementOpen}
+            onClose={() => setStaffManagementOpen(false)}
+          />
+        </>
       )}
 
       <AdminAuthModal

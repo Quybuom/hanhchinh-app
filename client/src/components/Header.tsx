@@ -1,11 +1,12 @@
 import { Button } from "@/components/ui/button";
-import { ClipboardList, FileText, LogIn, LogOut } from "lucide-react";
+import { ClipboardList, FileText, LogIn, LogOut, Users } from "lucide-react";
 
 interface HeaderProps {
   onAddFeedback: () => void;
   onShowReport: () => void;
   onAdminLoginClick: () => void;
   onAdminLogout: () => void;
+  onShowStaffManagement?: () => void;
   isAdminMode: boolean;
 }
 
@@ -14,6 +15,7 @@ export default function Header({
   onShowReport,
   onAdminLoginClick,
   onAdminLogout,
+  onShowStaffManagement,
   isAdminMode,
 }: HeaderProps) {
   return (
@@ -47,16 +49,28 @@ export default function Header({
             </Button>
 
             {isAdminMode && (
-              <Button
-                onClick={onShowReport}
-                variant="outline"
-                size="default"
-                className="gap-2"
-                data-testid="button-show-report"
-              >
-                <FileText className="w-4 h-4" />
-                <span className="hidden sm:inline">Báo cáo</span>
-              </Button>
+              <>
+                <Button
+                  onClick={onShowReport}
+                  variant="outline"
+                  size="default"
+                  className="gap-2"
+                  data-testid="button-show-report"
+                >
+                  <FileText className="w-4 h-4" />
+                  <span className="hidden sm:inline">Báo cáo</span>
+                </Button>
+                <Button
+                  onClick={onShowStaffManagement}
+                  variant="outline"
+                  size="default"
+                  className="gap-2"
+                  data-testid="button-staff-management"
+                >
+                  <Users className="w-4 h-4" />
+                  <span className="hidden sm:inline">Quản lý cán bộ</span>
+                </Button>
+              </>
             )}
 
             {isAdminMode ? (

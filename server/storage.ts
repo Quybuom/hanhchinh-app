@@ -1,8 +1,9 @@
-import { feedbacks, type Feedback, type InsertFeedback, Status } from "@shared/schema";
+import { feedbacks, type Feedback, type InsertFeedback, Status, staff, type Staff, type InsertStaff, units, type Unit, type InsertUnit, staffUnitAssignments, type StaffUnitAssignment } from "@shared/schema";
 import { db } from "./db";
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, and } from "drizzle-orm";
 
 export interface IStorage {
+  // Feedback operations
   getAllFeedbacks(): Promise<Feedback[]>;
   getFeedback(id: string): Promise<Feedback | undefined>;
   createFeedback(feedback: InsertFeedback): Promise<Feedback>;
@@ -11,6 +12,29 @@ export interface IStorage {
   assignFeedback(id: string, assignee: string | null): Promise<Feedback | undefined>;
   deleteFeedback(id: string): Promise<boolean>;
   submitReview(id: string, rating: number, reviewComment: string | undefined, contactPhone: string): Promise<Feedback | undefined>;
+  
+  // Staff operations
+  listStaff(): Promise<Staff[]>;
+  getStaff(id: number): Promise<Staff | undefined>;
+  createStaff(staff: InsertStaff): Promise<Staff>;
+  updateStaff(id: number, data: Partial<InsertStaff>): Promise<Staff | undefined>;
+  deleteStaff(id: number): Promise<boolean>;
+  
+  // Unit operations
+  listUnits(): Promise<Unit[]>;
+  getUnit(id: number): Promise<Unit | undefined>;
+  createUnit(unit: InsertUnit): Promise<Unit>;
+  updateUnit(id: number, data: Partial<InsertUnit>): Promise<Unit | undefined>;
+  deleteUnit(id: number): Promise<boolean>;
+  
+  // Staff-Unit assignments
+  assignStaffToUnit(staffId: number, unitId: number, isPrimary: boolean): Promise<StaffUnitAssignment>;
+  removeStaffFromUnit(staffId: number, unitId: number): Promise<boolean>;
+  getStaffUnits(staffId: number): Promise<Unit[]>;
+  getUnitStaff(unitId: number): Promise<Staff[]>;
+  
+  // Auto-assignment helper
+  findStaffByUnitName(unitName: string): Promise<Staff | undefined>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -112,6 +136,158 @@ export class DatabaseStorage implements IStorage {
       .returning();
     
     return feedback || undefined;
+  }
+
+  // Staff operations
+  async listStaff(): Promise<Staff[]> {
+    return await db.select().from(staff).orderBy(staff.name);
+  }
+
+  async getStaff(id: number): Promise<Staff | undefined> {
+    const [result] = await db.select().from(staff).where(eq(staff.id, id));
+    return result || undefined;
+  }
+
+  async createStaff(insertStaff: InsertStaff): Promise<Staff> {
+    const [result] = await db
+      .insert(staff)
+      .values({
+        ...insertStaff,
+        phone: insertStaff.phone || null,
+      })
+      .returning();
+    return result;
+  }
+
+  async updateStaff(id: number, data: Partial<InsertStaff>): Promise<Staff | undefined> {
+    const [result] = await db
+      .update(staff)
+      .set(data)
+      .where(eq(staff.id, id))
+      .returning();
+    return result || undefined;
+  }
+
+  async deleteStaff(id: number): Promise<boolean> {
+    const result = await db
+      .delete(staff)
+      .where(eq(staff.id, id))
+      .returning();
+    return result.length > 0;
+  }
+
+  // Unit operations
+  async listUnits(): Promise<Unit[]> {
+    return await db.select().from(units).orderBy(units.name);
+  }
+
+  async getUnit(id: number): Promise<Unit | undefined> {
+    const [result] = await db.select().from(units).where(eq(units.id, id));
+    return result || undefined;
+  }
+
+  async createUnit(insertUnit: InsertUnit): Promise<Unit> {
+    const [result] = await db
+      .insert(units)
+      .values({
+        ...insertUnit,
+        code: insertUnit.code || null,
+        parentUnitId: insertUnit.parentUnitId || null,
+      })
+      .returning();
+    return result;
+  }
+
+  async updateUnit(id: number, data: Partial<InsertUnit>): Promise<Unit | undefined> {
+    const [result] = await db
+      .update(units)
+      .set(data)
+      .where(eq(units.id, id))
+      .returning();
+    return result || undefined;
+  }
+
+  async deleteUnit(id: number): Promise<boolean> {
+    const result = await db
+      .delete(units)
+      .where(eq(units.id, id))
+      .returning();
+    return result.length > 0;
+  }
+
+  // Staff-Unit assignments
+  async assignStaffToUnit(staffId: number, unitId: number, isPrimary: boolean = true): Promise<StaffUnitAssignment> {
+    const [result] = await db
+      .insert(staffUnitAssignments)
+      .values({ staffId, unitId, isPrimary })
+      .onConflictDoUpdate({
+        target: [staffUnitAssignments.staffId, staffUnitAssignments.unitId],
+        set: { isPrimary },
+      })
+      .returning();
+    return result;
+  }
+
+  async removeStaffFromUnit(staffId: number, unitId: number): Promise<boolean> {
+    const result = await db
+      .delete(staffUnitAssignments)
+      .where(
+        and(
+          eq(staffUnitAssignments.staffId, staffId),
+          eq(staffUnitAssignments.unitId, unitId)
+        )
+      )
+      .returning();
+    return result.length > 0;
+  }
+
+  async getStaffUnits(staffId: number): Promise<Unit[]> {
+    const result = await db
+      .select({ unit: units })
+      .from(staffUnitAssignments)
+      .innerJoin(units, eq(staffUnitAssignments.unitId, units.id))
+      .where(eq(staffUnitAssignments.staffId, staffId));
+    return result.map(r => r.unit);
+  }
+
+  async getUnitStaff(unitId: number): Promise<Staff[]> {
+    const result = await db
+      .select({ staff: staff })
+      .from(staffUnitAssignments)
+      .innerJoin(staff, eq(staffUnitAssignments.staffId, staff.id))
+      .where(eq(staffUnitAssignments.unitId, unitId));
+    return result.map(r => r.staff);
+  }
+
+  // Auto-assignment helper
+  async findStaffByUnitName(unitName: string): Promise<Staff | undefined> {
+    // Normalize unit name for better matching
+    const normalizedUnitName = unitName.trim().toLowerCase();
+    
+    // Find unit by name (case-insensitive)
+    const [unit] = await db
+      .select()
+      .from(units)
+      .where(eq(units.name, unitName));
+    
+    if (!unit) {
+      return undefined;
+    }
+    
+    // Find active staff assigned to this unit
+    const result = await db
+      .select({ staff: staff })
+      .from(staffUnitAssignments)
+      .innerJoin(staff, eq(staffUnitAssignments.staffId, staff.id))
+      .where(
+        and(
+          eq(staffUnitAssignments.unitId, unit.id),
+          eq(staff.active, true)
+        )
+      )
+      .limit(1);
+    
+    return result.length > 0 ? result[0].staff : undefined;
   }
 }
 

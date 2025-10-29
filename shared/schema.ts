@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, timestamp, serial, integer } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, timestamp, serial, integer, boolean, primaryKey } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -55,3 +55,62 @@ export const STATUS_OPTIONS = [
 ];
 
 export const ASSIGNEES: string[] = [];
+
+// Staff table - Quản lý cán bộ
+export const staff = pgTable("staff", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  phone: text("phone"),
+  active: boolean("active").notNull().default(true),
+});
+
+// Units table - Danh sách đơn vị/địa bàn
+export const units = pgTable("units", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull().unique(),
+  code: text("code"),
+  parentUnitId: integer("parent_unit_id"),
+});
+
+// Staff-Unit assignments - Phân công cán bộ theo địa bàn
+export const staffUnitAssignments = pgTable("staff_unit_assignments", {
+  staffId: integer("staff_id").notNull().references(() => staff.id, { onDelete: 'cascade' }),
+  unitId: integer("unit_id").notNull().references(() => units.id, { onDelete: 'cascade' }),
+  isPrimary: boolean("is_primary").notNull().default(true),
+}, (table) => ({
+  pk: primaryKey({ columns: [table.staffId, table.unitId] }),
+}));
+
+// Staff schemas
+export const insertStaffSchema = createInsertSchema(staff).omit({
+  id: true,
+}).extend({
+  name: z.string().min(1, "Tên cán bộ không được để trống"),
+  phone: z.string().regex(/^[0-9]{10,11}$/, "Số điện thoại phải có 10-11 chữ số").optional().or(z.literal('')),
+  active: z.boolean().default(true),
+});
+
+export type InsertStaff = z.infer<typeof insertStaffSchema>;
+export type Staff = typeof staff.$inferSelect;
+
+// Units schemas
+export const insertUnitSchema = createInsertSchema(units).omit({
+  id: true,
+}).extend({
+  name: z.string().min(1, "Tên đơn vị không được để trống"),
+  code: z.string().optional().or(z.literal('')),
+  parentUnitId: z.number().optional().nullable(),
+});
+
+export type InsertUnit = z.infer<typeof insertUnitSchema>;
+export type Unit = typeof units.$inferSelect;
+
+// Staff-Unit assignment schemas
+export const insertStaffUnitAssignmentSchema = createInsertSchema(staffUnitAssignments).extend({
+  staffId: z.number(),
+  unitId: z.number(),
+  isPrimary: z.boolean().default(true),
+});
+
+export type InsertStaffUnitAssignment = z.infer<typeof insertStaffUnitAssignmentSchema>;
+export type StaffUnitAssignment = typeof staffUnitAssignments.$inferSelect;

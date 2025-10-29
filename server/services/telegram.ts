@@ -32,6 +32,7 @@ export async function sendTelegramNotification(
     unitName: string;
     title: string;
     description: string;
+    assignee?: string;
   }
 ): Promise<boolean> {
   try {
@@ -63,9 +64,15 @@ export async function sendTelegramNotification(
         `*Số kiến nghị:* #${feedbackDetails.trackingNumber}\n` +
         `*Đơn vị:* ${safeUnitName}\n` +
         `*Tiêu đề:* ${safeTitle}\n\n` +
-        `*Nội dung:*\n${safeDescription}\n\n` +
-        `---\n` +
-        `${safeMessage}`;
+        `*Nội dung:*\n${safeDescription}\n\n`;
+      
+      // Add auto-assignment info if available
+      if (feedbackDetails.assignee) {
+        const safeAssignee = escapeMarkdown(feedbackDetails.assignee);
+        fullMessage += `✅ *Tự động phân công:* ${safeAssignee}\n\n`;
+      }
+      
+      fullMessage += `---\n${safeMessage}`;
     } else {
       fullMessage = message;
     }

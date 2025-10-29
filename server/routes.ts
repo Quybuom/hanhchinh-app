@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertFeedbackSchema, submitReviewSchema, Status } from "@shared/schema";
+import { insertFeedbackSchema, submitReviewSchema, Status, insertStaffSchema, insertUnitSchema, insertStaffUnitAssignmentSchema } from "@shared/schema";
 import { z } from "zod";
 import { fromZodError } from "zod-validation-error";
 import { generateTelegramNotification } from "./services/gemini";
@@ -117,7 +117,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: error.message });
       }
 
-      const feedback = await storage.createFeedback(validationResult.data);
+      let feedback = await storage.createFeedback(validationResult.data);
+      
+      // Auto-assignment: Try to find staff responsible for this unit
+      let autoAssignedStaff = null;
+      try {
+        const staff = await storage.findStaffByUnitName(feedback.unitName);
+        if (staff) {
+          // Auto-assign to the responsible staff
+          const updatedFeedback = await storage.assignFeedback(feedback.id, staff.name);
+          if (updatedFeedback) {
+            feedback = updatedFeedback;
+            autoAssignedStaff = staff;
+            console.log(`Auto-assigned feedback #${feedback.trackingNumber} to staff: ${staff.name}`);
+          }
+        }
+      } catch (error) {
+        console.error("Error during auto-assignment:", error);
+        // Don't fail the entire request if auto-assignment fails
+      }
       
       // Generate AI notification asynchronously
       let message = "Phản ánh đã được gửi thành công";
@@ -133,9 +151,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         unitName: feedback.unitName,
         title: feedback.title,
         description: feedback.description,
+        assignee: autoAssignedStaff?.name,
       }).catch(err => console.error("Telegram notification failed:", err));
 
-      res.status(201).json({ feedback, message });
+      // If auto-assigned, also send assignee notification
+      if (autoAssignedStaff) {
+        sendAssigneeNotification(
+          feedback.trackingNumber,
+          autoAssignedStaff.name
+        ).catch(err => console.error("Assignee notification failed:", err));
+      }
+
+      res.status(201).json({ feedback, message, autoAssigned: !!autoAssignedStaff });
     } catch (error) {
       console.error("Error creating feedback:", error);
       res.status(500).json({ error: "Failed to create feedback" });
@@ -383,6 +410,267 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error exporting report:", error);
       res.status(500).json({ error: "Lỗi khi xuất báo cáo" });
+    }
+  });
+
+  // ==================== STAFF MANAGEMENT ENDPOINTS ====================
+
+  // Get all staff
+  app.get("/api/staff", async (_req, res) => {
+    try {
+      const staffList = await storage.listStaff();
+      res.json(staffList);
+    } catch (error) {
+      console.error("Error fetching staff:", error);
+      res.status(500).json({ error: "Không thể tải danh sách cán bộ" });
+    }
+  });
+
+  // Get single staff
+  app.get("/api/staff/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ error: "ID không hợp lệ" });
+      }
+      
+      const staffMember = await storage.getStaff(id);
+      if (!staffMember) {
+        return res.status(404).json({ error: "Không tìm thấy cán bộ" });
+      }
+      res.json(staffMember);
+    } catch (error) {
+      console.error("Error fetching staff:", error);
+      res.status(500).json({ error: "Không thể tải thông tin cán bộ" });
+    }
+  });
+
+  // Create staff
+  app.post("/api/staff", async (req, res) => {
+    try {
+      const validationResult = insertStaffSchema.safeParse(req.body);
+      if (!validationResult.success) {
+        const error = fromZodError(validationResult.error);
+        return res.status(400).json({ error: error.message });
+      }
+
+      const staffMember = await storage.createStaff(validationResult.data);
+      res.json(staffMember);
+    } catch (error) {
+      console.error("Error creating staff:", error);
+      res.status(500).json({ error: "Không thể tạo cán bộ mới" });
+    }
+  });
+
+  // Update staff
+  app.patch("/api/staff/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ error: "ID không hợp lệ" });
+      }
+
+      const validationResult = insertStaffSchema.partial().safeParse(req.body);
+      if (!validationResult.success) {
+        const error = fromZodError(validationResult.error);
+        return res.status(400).json({ error: error.message });
+      }
+
+      const staffMember = await storage.updateStaff(id, validationResult.data);
+      if (!staffMember) {
+        return res.status(404).json({ error: "Không tìm thấy cán bộ" });
+      }
+      res.json(staffMember);
+    } catch (error) {
+      console.error("Error updating staff:", error);
+      res.status(500).json({ error: "Không thể cập nhật cán bộ" });
+    }
+  });
+
+  // Delete staff
+  app.delete("/api/staff/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ error: "ID không hợp lệ" });
+      }
+
+      const deleted = await storage.deleteStaff(id);
+      if (!deleted) {
+        return res.status(404).json({ error: "Không tìm thấy cán bộ" });
+      }
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting staff:", error);
+      res.status(500).json({ error: "Không thể xóa cán bộ" });
+    }
+  });
+
+  // Get staff's assigned units
+  app.get("/api/staff/:id/units", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ error: "ID không hợp lệ" });
+      }
+
+      const unitsList = await storage.getStaffUnits(id);
+      res.json(unitsList);
+    } catch (error) {
+      console.error("Error fetching staff units:", error);
+      res.status(500).json({ error: "Không thể tải danh sách địa bàn" });
+    }
+  });
+
+  // ==================== UNIT MANAGEMENT ENDPOINTS ====================
+
+  // Get all units
+  app.get("/api/units", async (_req, res) => {
+    try {
+      const unitsList = await storage.listUnits();
+      res.json(unitsList);
+    } catch (error) {
+      console.error("Error fetching units:", error);
+      res.status(500).json({ error: "Không thể tải danh sách địa bàn" });
+    }
+  });
+
+  // Get single unit
+  app.get("/api/units/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ error: "ID không hợp lệ" });
+      }
+
+      const unit = await storage.getUnit(id);
+      if (!unit) {
+        return res.status(404).json({ error: "Không tìm thấy địa bàn" });
+      }
+      res.json(unit);
+    } catch (error) {
+      console.error("Error fetching unit:", error);
+      res.status(500).json({ error: "Không thể tải thông tin địa bàn" });
+    }
+  });
+
+  // Create unit
+  app.post("/api/units", async (req, res) => {
+    try {
+      const validationResult = insertUnitSchema.safeParse(req.body);
+      if (!validationResult.success) {
+        const error = fromZodError(validationResult.error);
+        return res.status(400).json({ error: error.message });
+      }
+
+      const unit = await storage.createUnit(validationResult.data);
+      res.json(unit);
+    } catch (error) {
+      console.error("Error creating unit:", error);
+      res.status(500).json({ error: "Không thể tạo địa bàn mới" });
+    }
+  });
+
+  // Update unit
+  app.patch("/api/units/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ error: "ID không hợp lệ" });
+      }
+
+      const validationResult = insertUnitSchema.partial().safeParse(req.body);
+      if (!validationResult.success) {
+        const error = fromZodError(validationResult.error);
+        return res.status(400).json({ error: error.message });
+      }
+
+      const unit = await storage.updateUnit(id, validationResult.data);
+      if (!unit) {
+        return res.status(404).json({ error: "Không tìm thấy địa bàn" });
+      }
+      res.json(unit);
+    } catch (error) {
+      console.error("Error updating unit:", error);
+      res.status(500).json({ error: "Không thể cập nhật địa bàn" });
+    }
+  });
+
+  // Delete unit
+  app.delete("/api/units/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ error: "ID không hợp lệ" });
+      }
+
+      const deleted = await storage.deleteUnit(id);
+      if (!deleted) {
+        return res.status(404).json({ error: "Không tìm thấy địa bàn" });
+      }
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting unit:", error);
+      res.status(500).json({ error: "Không thể xóa địa bàn" });
+    }
+  });
+
+  // Get unit's assigned staff
+  app.get("/api/units/:id/staff", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ error: "ID không hợp lệ" });
+      }
+
+      const staffList = await storage.getUnitStaff(id);
+      res.json(staffList);
+    } catch (error) {
+      console.error("Error fetching unit staff:", error);
+      res.status(500).json({ error: "Không thể tải danh sách cán bộ" });
+    }
+  });
+
+  // ==================== STAFF-UNIT ASSIGNMENT ENDPOINTS ====================
+
+  // Assign staff to unit
+  app.post("/api/staff/:staffId/units/:unitId", async (req, res) => {
+    try {
+      const staffId = parseInt(req.params.staffId);
+      const unitId = parseInt(req.params.unitId);
+      
+      if (isNaN(staffId) || isNaN(unitId)) {
+        return res.status(400).json({ error: "ID không hợp lệ" });
+      }
+
+      const { isPrimary = true } = req.body;
+
+      const assignment = await storage.assignStaffToUnit(staffId, unitId, isPrimary);
+      res.json(assignment);
+    } catch (error) {
+      console.error("Error assigning staff to unit:", error);
+      res.status(500).json({ error: "Không thể gán cán bộ cho địa bàn" });
+    }
+  });
+
+  // Remove staff from unit
+  app.delete("/api/staff/:staffId/units/:unitId", async (req, res) => {
+    try {
+      const staffId = parseInt(req.params.staffId);
+      const unitId = parseInt(req.params.unitId);
+      
+      if (isNaN(staffId) || isNaN(unitId)) {
+        return res.status(400).json({ error: "ID không hợp lệ" });
+      }
+
+      const removed = await storage.removeStaffFromUnit(staffId, unitId);
+      if (!removed) {
+        return res.status(404).json({ error: "Không tìm thấy phân công" });
+      }
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error removing staff from unit:", error);
+      res.status(500).json({ error: "Không thể hủy phân công" });
     }
   });
 
