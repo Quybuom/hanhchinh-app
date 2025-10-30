@@ -22,6 +22,7 @@ export const feedbacks = pgTable("feedbacks", {
   status: text("status").notNull().default(Status.Received),
   assignee: text("assignee"),
   assigneePhone: text("assignee_phone"),
+  resolutionComment: text("resolution_comment"),
   rating: integer("rating"),
   reviewComment: text("review_comment"),
 });
@@ -30,6 +31,7 @@ export const insertFeedbackSchema = createInsertSchema(feedbacks).omit({
   id: true,
   trackingNumber: true,
   submittedAt: true,
+  resolutionComment: true,
   rating: true,
   reviewComment: true,
 }).extend({
