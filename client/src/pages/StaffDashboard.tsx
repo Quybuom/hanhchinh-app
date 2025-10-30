@@ -14,6 +14,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import ResolutionDialog from "@/components/ResolutionDialog";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, LogOut, CheckCircle2, RotateCcw, User, Phone, MapPin, Calendar, Star } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -33,9 +34,11 @@ export default function StaffDashboard() {
   const { toast } = useToast();
   const [staff, setStaff] = useState<StaffInfo | null>(null);
   const [confirmAction, setConfirmAction] = useState<{
-    type: "resolve" | "reopen";
+    type: "reopen";
     feedbackId: string;
   } | null>(null);
+  const [resolutionDialogOpen, setResolutionDialogOpen] = useState(false);
+  const [resolvingFeedbackId, setResolvingFeedbackId] = useState<string | null>(null);
 
   // Check authentication on mount
   useEffect(() => {
@@ -68,8 +71,8 @@ export default function StaffDashboard() {
 
   // Update status mutation
   const updateStatusMutation = useMutation({
-    mutationFn: async ({ id, status }: { id: string; status: string }) => {
-      return await apiRequest("PATCH", `/api/feedbacks/${id}/status`, { status });
+    mutationFn: async ({ id, status, resolutionComment }: { id: string; status: string; resolutionComment?: string }) => {
+      return await apiRequest("PATCH", `/api/feedbacks/${id}/status`, { status, resolutionComment });
     },
     onSuccess: () => {
       // Invalidate staff feedbacks query
@@ -80,6 +83,8 @@ export default function StaffDashboard() {
         title: "Cập nhật thành công",
         description: "Trạng thái phản ánh đã được cập nhật",
       });
+      setResolutionDialogOpen(false);
+      setResolvingFeedbackId(null);
     },
     onError: (error: any) => {
       toast({
@@ -95,15 +100,27 @@ export default function StaffDashboard() {
     navigate("/login");
   };
 
-  const handleStatusChange = (feedbackId: string, type: "resolve" | "reopen") => {
-    setConfirmAction({ type, feedbackId });
+  const handleResolve = (feedbackId: string) => {
+    setResolvingFeedbackId(feedbackId);
+    setResolutionDialogOpen(true);
+  };
+
+  const handleResolutionSubmit = (resolutionComment: string) => {
+    if (!resolvingFeedbackId) return;
+    updateStatusMutation.mutate({ 
+      id: resolvingFeedbackId, 
+      status: "resolved",
+      resolutionComment 
+    });
+  };
+
+  const handleReopen = (feedbackId: string) => {
+    setConfirmAction({ type: "reopen", feedbackId });
   };
 
   const confirmStatusChange = () => {
     if (!confirmAction) return;
-
-    const newStatus = confirmAction.type === "resolve" ? "resolved" : "processing";
-    updateStatusMutation.mutate({ id: confirmAction.feedbackId, status: newStatus });
+    updateStatusMutation.mutate({ id: confirmAction.feedbackId, status: "processing" });
     setConfirmAction(null);
   };
 
@@ -225,7 +242,7 @@ export default function StaffDashboard() {
                       {feedback.status === "processing" && (
                         <Button
                           size="sm"
-                          onClick={() => handleStatusChange(feedback.id, "resolve")}
+                          onClick={() => handleResolve(feedback.id)}
                           disabled={updateStatusMutation.isPending}
                           data-testid={`button-resolve-${feedback.id}`}
                         >
@@ -237,7 +254,7 @@ export default function StaffDashboard() {
                         <Button
                           size="sm"
                           variant="outline"
-                          onClick={() => handleStatusChange(feedback.id, "reopen")}
+                          onClick={() => handleReopen(feedback.id)}
                           disabled={updateStatusMutation.isPending}
                           data-testid={`button-reopen-${feedback.id}`}
                         >
@@ -303,17 +320,21 @@ export default function StaffDashboard() {
         </div>
       </div>
 
-      {/* Confirmation Dialog */}
+      {/* Resolution Dialog */}
+      <ResolutionDialog
+        open={resolutionDialogOpen}
+        onOpenChange={setResolutionDialogOpen}
+        onSubmit={handleResolutionSubmit}
+        isPending={updateStatusMutation.isPending}
+      />
+
+      {/* Reopen Confirmation Dialog */}
       <AlertDialog open={!!confirmAction} onOpenChange={() => setConfirmAction(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>
-              {confirmAction?.type === "resolve" ? "Xác nhận đã xử lý" : "Xác nhận xử lý lại"}
-            </AlertDialogTitle>
+            <AlertDialogTitle>Xác nhận xử lý lại</AlertDialogTitle>
             <AlertDialogDescription>
-              {confirmAction?.type === "resolve"
-                ? "Bạn có chắc chắn đã hoàn thành xử lý phản ánh này không?"
-                : "Bạn có chắc chắn muốn chuyển phản ánh này về trạng thái đang xử lý không?"}
+              Bạn có chắc chắn muốn chuyển phản ánh này về trạng thái đang xử lý không?
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
