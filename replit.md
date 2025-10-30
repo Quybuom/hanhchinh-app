@@ -42,6 +42,20 @@ The system is built as a full-stack application with a clear separation of conce
   - Real-time UI updates - changes visible immediately without page reload
   - Both comment and image cleared when feedback is reopened
   - Cache invalidation ensures staff and public views stay synchronized
+  - Resolution editing capability - staff can edit resolution comments directly without reopening feedback via "Chỉnh sửa ý kiến" button
+  - Staff dashboard displays resolution comments immediately after submission for review and editing
+- **Search and Filter Capabilities**: Comprehensive search and time-based filtering across all interfaces:
+  - **Public Interface**: Search by location (unitName) and sender name (contactName), with dynamic year/month filtering based on available feedback data
+  - **Staff Dashboard**: Search by location, sender name, and title, with year/month filtering on assigned feedbacks only
+  - Dynamic available years generated from actual feedback submission dates
+  - Real-time result count display when filters are active
+- **Enhanced UI Clarity**: Improved feedback content display for better readability:
+  - Added "Nội dung kiến nghị:" section label for feedback descriptions
+  - Increased font size from text-sm to text-base for both feedback descriptions and resolution comments
+  - Improved text contrast (text-foreground instead of text-muted-foreground) for feedback content
+  - Added whitespace-pre-wrap to preserve line breaks in descriptions and resolutions
+  - Enhanced resolution section with larger icon (w-5 h-5) and stronger border (border-t-2) for visual prominence
+  - Improved spacing and padding throughout feedback cards
 - **Rating System**: Users can rate resolved feedback (1-5 stars) with an optional comment, after phone number verification. Public users can only review resolved feedback, not mark them as resolved (staff-only action).
 - **Notifications**: Telegram Bot API for real-time notifications for new feedback, assignee assignment, and status changes. Markdown escaping is applied to prevent parsing errors.
 
