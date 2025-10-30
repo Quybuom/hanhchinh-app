@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useMemo } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { queryClient, apiRequest } from "@/lib/queryClient";
@@ -13,7 +13,8 @@ import ReportModal from "@/components/ReportModal";
 import StaffManagementModal from "@/components/StaffManagementModal";
 import Toast from "@/components/Toast";
 import AdminAuthModal from "@/components/AdminAuthModal";
-import { Loader2 } from "lucide-react";
+import { Loader2, Search } from "lucide-react";
+import { Input } from "@/components/ui/input";
 
 export default function Home() {
   const [, navigate] = useLocation();
@@ -25,6 +26,7 @@ export default function Home() {
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [isAdminMode, setAdminMode] = useState(false);
   const [isAuthModalOpen, setAuthModalOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
 
   // Check admin session on mount
   useEffect(() => {
@@ -45,6 +47,17 @@ export default function Home() {
   const { data: feedbackItems = [], isLoading } = useQuery<Feedback[]>({
     queryKey: ["/api/feedbacks"],
   });
+
+  const filteredFeedbacks = useMemo(() => {
+    if (!searchQuery.trim()) return feedbackItems;
+    
+    const query = searchQuery.toLowerCase().trim();
+    return feedbackItems.filter(feedback => {
+      const unitName = feedback.unitName?.toLowerCase() || "";
+      const contactName = feedback.contactName?.toLowerCase() || "";
+      return unitName.includes(query) || contactName.includes(query);
+    });
+  }, [feedbackItems, searchQuery]);
 
   const addFeedbackMutation = useMutation({
     mutationFn: async (data: Omit<InsertFeedback, 'status' | 'assignee'>) => {
@@ -210,8 +223,29 @@ export default function Home() {
 
       <main className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8 w-full flex-grow">
         <ReportSummary feedbackItems={feedbackItems} />
+        
+        {/* Search Filter */}
+        <div className="mb-6">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input
+              type="text"
+              placeholder="Tìm kiếm theo địa bàn hoặc tên người gửi..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10"
+              data-testid="input-search"
+            />
+          </div>
+          {searchQuery && (
+            <p className="mt-2 text-sm text-muted-foreground">
+              Tìm thấy {filteredFeedbacks.length} kết quả
+            </p>
+          )}
+        </div>
+        
         <FeedbackList
-          feedbackItems={feedbackItems}
+          feedbackItems={filteredFeedbacks}
           onUpdateStatus={handleUpdateStatus}
           onAssign={handleAssign}
           onEdit={handleEditFeedback}
