@@ -102,13 +102,16 @@ export default function FeedbackCard({
       </CardHeader>
 
       <CardContent className="space-y-4">
-        <div>
-          <h3 className="text-lg font-semibold text-foreground mb-2" data-testid={`feedback-title-${feedback.id}`}>
+        <div className="space-y-3">
+          <h3 className="text-lg font-semibold text-foreground mb-1" data-testid={`feedback-title-${feedback.id}`}>
             {feedback.title}
           </h3>
-          <p className="text-sm text-muted-foreground leading-relaxed" data-testid={`feedback-description-${feedback.id}`}>
-            {feedback.description}
-          </p>
+          <div className="space-y-2">
+            <span className="text-sm font-medium text-foreground block">Nội dung kiến nghị:</span>
+            <p className="text-base text-foreground leading-relaxed whitespace-pre-wrap" data-testid={`feedback-description-${feedback.id}`}>
+              {feedback.description}
+            </p>
+          </div>
         </div>
 
         {feedback.imageUrl && (
@@ -169,18 +172,18 @@ export default function FeedbackCard({
 
         {/* Resolution Comment Display */}
         {feedback.resolutionComment && feedbackStatus === Status.Resolved && (
-          <div className="pt-4 border-t border-card-border/50">
+          <div className="pt-4 border-t-2 border-green-200 dark:border-green-800">
             <div className="space-y-3">
               <div className="flex items-center gap-2">
-                <CheckCircle className="w-4 h-4 text-green-600" />
-                <span className="font-medium text-foreground">Ý kiến giải quyết:</span>
+                <CheckCircle className="w-5 h-5 text-green-600" />
+                <span className="font-semibold text-foreground text-base">Ý kiến giải quyết:</span>
               </div>
-              <div className="bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-900/50 rounded-md p-3 space-y-3">
-                <p className="text-sm text-foreground" data-testid={`feedback-resolution-${feedback.id}`}>
+              <div className="bg-green-50 dark:bg-green-950/20 border-2 border-green-200 dark:border-green-900/50 rounded-lg p-4 space-y-3">
+                <p className="text-base text-foreground leading-relaxed whitespace-pre-wrap" data-testid={`feedback-resolution-${feedback.id}`}>
                   {feedback.resolutionComment}
                 </p>
                 {feedback.resolutionImageUrl && (
-                  <div className="rounded-md overflow-hidden border border-green-300 dark:border-green-800">
+                  <div className="rounded-md overflow-hidden border-2 border-green-300 dark:border-green-800">
                     <img
                       src={feedback.resolutionImageUrl}
                       alt="Hình ảnh giải quyết"
