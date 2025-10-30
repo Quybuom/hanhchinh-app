@@ -13,8 +13,9 @@ import ReportModal from "@/components/ReportModal";
 import StaffManagementModal from "@/components/StaffManagementModal";
 import Toast from "@/components/Toast";
 import AdminAuthModal from "@/components/AdminAuthModal";
-import { Loader2, Search } from "lucide-react";
+import { Loader2, Search, Calendar as CalendarIcon } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 export default function Home() {
   const [, navigate] = useLocation();
@@ -27,6 +28,8 @@ export default function Home() {
   const [isAdminMode, setAdminMode] = useState(false);
   const [isAuthModalOpen, setAuthModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedMonth, setSelectedMonth] = useState<string>("all");
+  const [selectedYear, setSelectedYear] = useState<string>("all");
 
   // Check admin session on mount
   useEffect(() => {
@@ -48,16 +51,47 @@ export default function Home() {
     queryKey: ["/api/feedbacks"],
   });
 
-  const filteredFeedbacks = useMemo(() => {
-    if (!searchQuery.trim()) return feedbackItems;
-    
-    const query = searchQuery.toLowerCase().trim();
-    return feedbackItems.filter(feedback => {
-      const unitName = feedback.unitName?.toLowerCase() || "";
-      const contactName = feedback.contactName?.toLowerCase() || "";
-      return unitName.includes(query) || contactName.includes(query);
+  // Get available years and months from feedbacks
+  const availableYears = useMemo(() => {
+    const years = new Set<number>();
+    feedbackItems.forEach(feedback => {
+      const year = new Date(feedback.submittedAt).getFullYear();
+      years.add(year);
     });
-  }, [feedbackItems, searchQuery]);
+    return Array.from(years).sort((a, b) => b - a);
+  }, [feedbackItems]);
+
+  const filteredFeedbacks = useMemo(() => {
+    let result = feedbackItems;
+    
+    // Filter by search query
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase().trim();
+      result = result.filter(feedback => {
+        const unitName = feedback.unitName?.toLowerCase() || "";
+        const contactName = feedback.contactName?.toLowerCase() || "";
+        return unitName.includes(query) || contactName.includes(query);
+      });
+    }
+    
+    // Filter by year
+    if (selectedYear !== "all") {
+      result = result.filter(feedback => {
+        const year = new Date(feedback.submittedAt).getFullYear();
+        return year === parseInt(selectedYear);
+      });
+    }
+    
+    // Filter by month
+    if (selectedMonth !== "all") {
+      result = result.filter(feedback => {
+        const month = new Date(feedback.submittedAt).getMonth() + 1;
+        return month === parseInt(selectedMonth);
+      });
+    }
+    
+    return result;
+  }, [feedbackItems, searchQuery, selectedYear, selectedMonth]);
 
   const addFeedbackMutation = useMutation({
     mutationFn: async (data: Omit<InsertFeedback, 'status' | 'assignee'>) => {
@@ -224,21 +258,57 @@ export default function Home() {
       <main className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8 w-full flex-grow">
         <ReportSummary feedbackItems={feedbackItems} />
         
-        {/* Search Filter */}
-        <div className="mb-6">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <Input
-              type="text"
-              placeholder="Tìm kiếm theo địa bàn hoặc tên người gửi..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10"
-              data-testid="input-search"
-            />
+        {/* Search and Filter Section */}
+        <div className="mb-6 space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="relative md:col-span-1">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input
+                type="text"
+                placeholder="Tìm kiếm theo địa bàn hoặc tên người gửi..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10"
+                data-testid="input-search"
+              />
+            </div>
+            
+            <Select value={selectedYear} onValueChange={setSelectedYear}>
+              <SelectTrigger data-testid="select-year">
+                <SelectValue placeholder="Chọn năm" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Tất cả các năm</SelectItem>
+                {availableYears.map(year => (
+                  <SelectItem key={year} value={year.toString()}>{year}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            
+            <Select value={selectedMonth} onValueChange={setSelectedMonth}>
+              <SelectTrigger data-testid="select-month">
+                <SelectValue placeholder="Chọn tháng" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Tất cả các tháng</SelectItem>
+                <SelectItem value="1">Tháng 1</SelectItem>
+                <SelectItem value="2">Tháng 2</SelectItem>
+                <SelectItem value="3">Tháng 3</SelectItem>
+                <SelectItem value="4">Tháng 4</SelectItem>
+                <SelectItem value="5">Tháng 5</SelectItem>
+                <SelectItem value="6">Tháng 6</SelectItem>
+                <SelectItem value="7">Tháng 7</SelectItem>
+                <SelectItem value="8">Tháng 8</SelectItem>
+                <SelectItem value="9">Tháng 9</SelectItem>
+                <SelectItem value="10">Tháng 10</SelectItem>
+                <SelectItem value="11">Tháng 11</SelectItem>
+                <SelectItem value="12">Tháng 12</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
-          {searchQuery && (
-            <p className="mt-2 text-sm text-muted-foreground">
+          
+          {(searchQuery || selectedYear !== "all" || selectedMonth !== "all") && (
+            <p className="text-sm text-muted-foreground">
               Tìm thấy {filteredFeedbacks.length} kết quả
             </p>
           )}
