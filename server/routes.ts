@@ -239,6 +239,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const statusSchema = z.object({
         status: z.enum([Status.Received, Status.Processing, Status.Resolved]),
+        resolutionComment: z.string().optional(),
       });
 
       const validationResult = statusSchema.safeParse(req.body);
@@ -249,7 +250,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const feedback = await storage.updateFeedbackStatus(
         req.params.id,
-        validationResult.data.status
+        validationResult.data.status,
+        validationResult.data.resolutionComment
       );
 
       if (!feedback) {
