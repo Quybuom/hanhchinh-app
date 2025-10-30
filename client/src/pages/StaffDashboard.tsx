@@ -97,7 +97,7 @@ export default function StaffDashboard() {
 
   const handleLogout = () => {
     localStorage.removeItem("staff");
-    navigate("/login");
+    navigate("/");
   };
 
   const handleResolve = (feedbackId: string) => {

@@ -229,19 +229,6 @@ export default function FeedbackCard({
         {/* Public User Actions */}
         {!isAdminMode && (
           <div className="flex flex-wrap items-center gap-2 ml-auto">
-            {/* Mark as Resolved Button - Only show when processing */}
-            {canMarkResolved && (
-              <Button
-                variant="default"
-                size="sm"
-                onClick={() => setIsMarkResolvedDialogOpen(true)}
-                data-testid={`button-mark-resolved-${feedback.id}`}
-              >
-                <CheckCircle className="w-4 h-4 mr-2" />
-                Đã xử lý
-              </Button>
-            )}
-            
             {/* Review Button - Only show when resolved and no rating */}
             {canReview && (
               <Button
