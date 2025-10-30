@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -17,6 +17,8 @@ interface ResolutionDialogProps {
   onOpenChange: (open: boolean) => void;
   onSubmit: (resolutionComment: string, resolutionImageUrl?: string) => void;
   isPending?: boolean;
+  initialComment?: string;
+  initialImageUrl?: string;
 }
 
 export default function ResolutionDialog({
@@ -24,11 +26,22 @@ export default function ResolutionDialog({
   onOpenChange,
   onSubmit,
   isPending = false,
+  initialComment = "",
+  initialImageUrl = "",
 }: ResolutionDialogProps) {
   const [comment, setComment] = useState("");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [uploadedImageUrl, setUploadedImageUrl] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+
+  // Load initial values when dialog opens
+  useEffect(() => {
+    if (open) {
+      setComment(initialComment);
+      setUploadedImageUrl(initialImageUrl || null);
+      setSelectedFile(null);
+    }
+  }, [open, initialComment, initialImageUrl]);
 
   const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];

@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import ResolutionDialog from "@/components/ResolutionDialog";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, LogOut, CheckCircle2, RotateCcw, User, Phone, MapPin, Calendar, Star } from "lucide-react";
+import { Loader2, LogOut, CheckCircle2, RotateCcw, User, Phone, MapPin, Calendar, Star, Edit2, CheckCircle } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { Feedback } from "@shared/schema";
 import { format } from "date-fns";
@@ -104,6 +104,11 @@ export default function StaffDashboard() {
   };
 
   const handleResolve = (feedbackId: string) => {
+    setResolvingFeedbackId(feedbackId);
+    setResolutionDialogOpen(true);
+  };
+
+  const handleEditResolution = (feedbackId: string) => {
     setResolvingFeedbackId(feedbackId);
     setResolutionDialogOpen(true);
   };
@@ -255,16 +260,27 @@ export default function StaffDashboard() {
                         </Button>
                       )}
                       {feedback.status === "resolved" && (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => handleReopen(feedback.id)}
-                          disabled={updateStatusMutation.isPending}
-                          data-testid={`button-reopen-${feedback.id}`}
-                        >
-                          <RotateCcw className="w-4 h-4 mr-1" />
-                          Xử lý lại
-                        </Button>
+                        <>
+                          <Button
+                            size="sm"
+                            onClick={() => handleEditResolution(feedback.id)}
+                            disabled={updateStatusMutation.isPending}
+                            data-testid={`button-edit-resolution-${feedback.id}`}
+                          >
+                            <Edit2 className="w-4 h-4 mr-1" />
+                            Chỉnh sửa ý kiến
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleReopen(feedback.id)}
+                            disabled={updateStatusMutation.isPending}
+                            data-testid={`button-reopen-${feedback.id}`}
+                          >
+                            <RotateCcw className="w-4 h-4 mr-1" />
+                            Xử lý lại
+                          </Button>
+                        </>
                       )}
                     </div>
                   </div>
@@ -317,6 +333,33 @@ export default function StaffDashboard() {
                       />
                     </div>
                   )}
+
+                  {/* Resolution Comment Display */}
+                  {feedback.resolutionComment && feedback.status === "resolved" && (
+                    <div className="border-t border-card-border pt-4">
+                      <div className="space-y-3">
+                        <div className="flex items-center gap-2">
+                          <CheckCircle className="w-4 h-4 text-green-600" />
+                          <span className="font-medium text-foreground">Ý kiến giải quyết:</span>
+                        </div>
+                        <div className="bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-900/50 rounded-md p-3 space-y-3">
+                          <p className="text-sm text-foreground" data-testid={`feedback-resolution-${feedback.id}`}>
+                            {feedback.resolutionComment}
+                          </p>
+                          {feedback.resolutionImageUrl && (
+                            <div className="rounded-md overflow-hidden border border-green-300 dark:border-green-800">
+                              <img
+                                src={feedback.resolutionImageUrl}
+                                alt="Hình ảnh giải quyết"
+                                className="w-full h-auto max-h-64 object-cover"
+                                data-testid={`feedback-resolution-image-${feedback.id}`}
+                              />
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             ))
@@ -330,6 +373,16 @@ export default function StaffDashboard() {
         onOpenChange={setResolutionDialogOpen}
         onSubmit={handleResolutionSubmit}
         isPending={updateStatusMutation.isPending}
+        initialComment={
+          resolvingFeedbackId 
+            ? myFeedbacks.find(f => f.id === resolvingFeedbackId)?.resolutionComment || ""
+            : ""
+        }
+        initialImageUrl={
+          resolvingFeedbackId
+            ? myFeedbacks.find(f => f.id === resolvingFeedbackId)?.resolutionImageUrl || ""
+            : ""
+        }
       />
 
       {/* Reopen Confirmation Dialog */}
