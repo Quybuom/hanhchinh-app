@@ -148,10 +148,10 @@ export default function FeedbackCard({
           </div>
           <div className="flex items-start gap-2">
             <User className="w-4 h-4 mt-0.5 text-primary" />
-            <div>
-              <span className="font-medium text-foreground">Cán bộ xử lý:</span>
+            <div className="flex-1">
+              <span className="font-medium text-foreground">Cán bộ xử lý: </span>
               {feedback.assignee ? (
-                <div className="ml-1">
+                <span className="inline">
                   <span className="text-muted-foreground" data-testid={`feedback-assignee-detail-${feedback.id}`}>
                     {feedback.assignee}
                   </span>
@@ -160,9 +160,9 @@ export default function FeedbackCard({
                       ({feedback.assigneePhone})
                     </span>
                   )}
-                </div>
+                </span>
               ) : (
-                <span className="ml-1 text-amber-600 dark:text-amber-400 font-medium" data-testid={`feedback-unassigned-${feedback.id}`}>
+                <span className="text-amber-600 dark:text-amber-400 font-medium" data-testid={`feedback-unassigned-${feedback.id}`}>
                   Chưa phân công
                 </span>
               )}
