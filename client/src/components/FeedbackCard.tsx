@@ -167,6 +167,23 @@ export default function FeedbackCard({
           </div>
         </div>
 
+        {/* Resolution Comment Display */}
+        {feedback.resolutionComment && feedbackStatus === Status.Resolved && (
+          <div className="pt-4 border-t border-card-border/50">
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <CheckCircle className="w-4 h-4 text-green-600" />
+                <span className="font-medium text-foreground">Ý kiến giải quyết:</span>
+              </div>
+              <div className="bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-900/50 rounded-md p-3">
+                <p className="text-sm text-foreground" data-testid={`feedback-resolution-${feedback.id}`}>
+                  {feedback.resolutionComment}
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Rating Display */}
         {hasRating && (
           <div className="pt-4 border-t border-card-border/50">
