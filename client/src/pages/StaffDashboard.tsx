@@ -79,6 +79,9 @@ export default function StaffDashboard() {
       if (staff) {
         queryClient.invalidateQueries({ queryKey: [`/api/staff/${staff.id}/feedbacks`] });
       }
+      // Also invalidate public feedbacks to update home page in real-time
+      queryClient.invalidateQueries({ queryKey: ["/api/feedbacks"] });
+      
       toast({
         title: "Cập nhật thành công",
         description: "Trạng thái phản ánh đã được cập nhật",
