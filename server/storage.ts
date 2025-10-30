@@ -9,7 +9,7 @@ export interface IStorage {
   getFeedback(id: string): Promise<Feedback | undefined>;
   createFeedback(feedback: InsertFeedback): Promise<Feedback>;
   updateFeedback(id: string, data: Partial<InsertFeedback>): Promise<Feedback | undefined>;
-  updateFeedbackStatus(id: string, status: Status, resolutionComment?: string): Promise<Feedback | undefined>;
+  updateFeedbackStatus(id: string, status: Status, resolutionComment?: string, resolutionImageUrl?: string): Promise<Feedback | undefined>;
   assignFeedback(id: string, assignee: string | null, assigneePhone?: string | null): Promise<Feedback | undefined>;
   deleteFeedback(id: string): Promise<boolean>;
   submitReview(id: string, rating: number, reviewComment: string | undefined, contactPhone: string): Promise<Feedback | undefined>;
@@ -65,16 +65,22 @@ export class DatabaseStorage implements IStorage {
     return feedback;
   }
 
-  async updateFeedbackStatus(id: string, status: Status, resolutionComment?: string): Promise<Feedback | undefined> {
-    const updateData: { status: Status; resolutionComment?: string | null } = { status };
+  async updateFeedbackStatus(id: string, status: Status, resolutionComment?: string, resolutionImageUrl?: string): Promise<Feedback | undefined> {
+    const updateData: { status: Status; resolutionComment?: string | null; resolutionImageUrl?: string | null } = { status };
     
-    // When resolving, save the resolution comment if provided
-    if (status === Status.Resolved && resolutionComment) {
-      updateData.resolutionComment = resolutionComment;
+    // When resolving, save the resolution comment and image if provided
+    if (status === Status.Resolved) {
+      if (resolutionComment) {
+        updateData.resolutionComment = resolutionComment;
+      }
+      if (resolutionImageUrl) {
+        updateData.resolutionImageUrl = resolutionImageUrl;
+      }
     }
-    // When reopening (setting to processing), clear the resolution comment
+    // When reopening (setting to processing), clear the resolution comment and image
     if (status === Status.Processing) {
       updateData.resolutionComment = null;
+      updateData.resolutionImageUrl = null;
     }
     
     const [feedback] = await db

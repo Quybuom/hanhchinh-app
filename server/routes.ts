@@ -240,6 +240,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const statusSchema = z.object({
         status: z.enum([Status.Received, Status.Processing, Status.Resolved]),
         resolutionComment: z.string().optional(),
+        resolutionImageUrl: z.string().optional(),
       });
 
       const validationResult = statusSchema.safeParse(req.body);
@@ -251,7 +252,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const feedback = await storage.updateFeedbackStatus(
         req.params.id,
         validationResult.data.status,
-        validationResult.data.resolutionComment
+        validationResult.data.resolutionComment,
+        validationResult.data.resolutionImageUrl
       );
 
       if (!feedback) {

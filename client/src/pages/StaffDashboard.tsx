@@ -71,8 +71,8 @@ export default function StaffDashboard() {
 
   // Update status mutation
   const updateStatusMutation = useMutation({
-    mutationFn: async ({ id, status, resolutionComment }: { id: string; status: string; resolutionComment?: string }) => {
-      return await apiRequest("PATCH", `/api/feedbacks/${id}/status`, { status, resolutionComment });
+    mutationFn: async ({ id, status, resolutionComment, resolutionImageUrl }: { id: string; status: string; resolutionComment?: string; resolutionImageUrl?: string }) => {
+      return await apiRequest("PATCH", `/api/feedbacks/${id}/status`, { status, resolutionComment, resolutionImageUrl });
     },
     onSuccess: () => {
       // Invalidate staff feedbacks query
@@ -108,12 +108,13 @@ export default function StaffDashboard() {
     setResolutionDialogOpen(true);
   };
 
-  const handleResolutionSubmit = (resolutionComment: string) => {
+  const handleResolutionSubmit = (resolutionComment: string, resolutionImageUrl?: string) => {
     if (!resolvingFeedbackId) return;
     updateStatusMutation.mutate({ 
       id: resolvingFeedbackId, 
       status: "resolved",
-      resolutionComment 
+      resolutionComment,
+      resolutionImageUrl
     });
   };
 
