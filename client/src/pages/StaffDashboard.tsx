@@ -1,9 +1,11 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useLocation } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -16,7 +18,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import ResolutionDialog from "@/components/ResolutionDialog";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, LogOut, CheckCircle2, RotateCcw, User, Phone, MapPin, Calendar, Star, Edit2, CheckCircle } from "lucide-react";
+import { Loader2, LogOut, CheckCircle2, RotateCcw, User, Phone, MapPin, Calendar, Star, Edit2, CheckCircle, Search } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { Feedback } from "@shared/schema";
 import { format } from "date-fns";
@@ -39,6 +41,9 @@ export default function StaffDashboard() {
   } | null>(null);
   const [resolutionDialogOpen, setResolutionDialogOpen] = useState(false);
   const [resolvingFeedbackId, setResolvingFeedbackId] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedMonth, setSelectedMonth] = useState<string>("all");
+  const [selectedYear, setSelectedYear] = useState<string>("all");
 
   // Check authentication on mount
   useEffect(() => {
@@ -61,12 +66,56 @@ export default function StaffDashboard() {
     enabled: !!staff,
   });
 
-  // Calculate statistics
+  // Get available years from feedbacks
+  const availableYears = useMemo(() => {
+    const years = new Set<number>();
+    myFeedbacks.forEach(feedback => {
+      const year = new Date(feedback.submittedAt).getFullYear();
+      years.add(year);
+    });
+    return Array.from(years).sort((a, b) => b - a);
+  }, [myFeedbacks]);
+
+  // Filter feedbacks
+  const filteredFeedbacks = useMemo(() => {
+    let result = myFeedbacks;
+    
+    // Filter by search query
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase().trim();
+      result = result.filter(feedback => {
+        const unitName = feedback.unitName?.toLowerCase() || "";
+        const contactName = feedback.contactName?.toLowerCase() || "";
+        const title = feedback.title?.toLowerCase() || "";
+        return unitName.includes(query) || contactName.includes(query) || title.includes(query);
+      });
+    }
+    
+    // Filter by year
+    if (selectedYear !== "all") {
+      result = result.filter(feedback => {
+        const year = new Date(feedback.submittedAt).getFullYear();
+        return year === parseInt(selectedYear);
+      });
+    }
+    
+    // Filter by month
+    if (selectedMonth !== "all") {
+      result = result.filter(feedback => {
+        const month = new Date(feedback.submittedAt).getMonth() + 1;
+        return month === parseInt(selectedMonth);
+      });
+    }
+    
+    return result;
+  }, [myFeedbacks, searchQuery, selectedYear, selectedMonth]);
+
+  // Calculate statistics from filtered feedbacks
   const stats = {
-    total: myFeedbacks.length,
-    received: myFeedbacks.filter((fb) => fb.status === "received").length,
-    processing: myFeedbacks.filter((fb) => fb.status === "processing").length,
-    resolved: myFeedbacks.filter((fb) => fb.status === "resolved").length,
+    total: filteredFeedbacks.length,
+    received: filteredFeedbacks.filter((fb) => fb.status === "received").length,
+    processing: filteredFeedbacks.filter((fb) => fb.status === "processing").length,
+    resolved: filteredFeedbacks.filter((fb) => fb.status === "resolved").length,
   };
 
   // Update status mutation
@@ -197,6 +246,62 @@ export default function StaffDashboard() {
           </Card>
         </div>
 
+        {/* Search and Filter Section */}
+        <div className="mb-6 space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="relative md:col-span-1">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input
+                type="text"
+                placeholder="Tìm kiếm theo địa bàn, tên người gửi hoặc tiêu đề..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10"
+                data-testid="input-search-staff"
+              />
+            </div>
+            
+            <Select value={selectedYear} onValueChange={setSelectedYear}>
+              <SelectTrigger data-testid="select-year-staff">
+                <SelectValue placeholder="Chọn năm" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Tất cả các năm</SelectItem>
+                {availableYears.map(year => (
+                  <SelectItem key={year} value={year.toString()}>{year}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            
+            <Select value={selectedMonth} onValueChange={setSelectedMonth}>
+              <SelectTrigger data-testid="select-month-staff">
+                <SelectValue placeholder="Chọn tháng" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Tất cả các tháng</SelectItem>
+                <SelectItem value="1">Tháng 1</SelectItem>
+                <SelectItem value="2">Tháng 2</SelectItem>
+                <SelectItem value="3">Tháng 3</SelectItem>
+                <SelectItem value="4">Tháng 4</SelectItem>
+                <SelectItem value="5">Tháng 5</SelectItem>
+                <SelectItem value="6">Tháng 6</SelectItem>
+                <SelectItem value="7">Tháng 7</SelectItem>
+                <SelectItem value="8">Tháng 8</SelectItem>
+                <SelectItem value="9">Tháng 9</SelectItem>
+                <SelectItem value="10">Tháng 10</SelectItem>
+                <SelectItem value="11">Tháng 11</SelectItem>
+                <SelectItem value="12">Tháng 12</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          
+          {(searchQuery || selectedYear !== "all" || selectedMonth !== "all") && (
+            <p className="text-sm text-muted-foreground">
+              Tìm thấy {filteredFeedbacks.length} kết quả
+            </p>
+          )}
+        </div>
+
         {/* Feedbacks List */}
         <div className="space-y-4">
           <h2 className="text-xl font-semibold">Phản ánh được phân công</h2>
@@ -205,14 +310,16 @@ export default function StaffDashboard() {
             <div className="flex justify-center py-12">
               <Loader2 className="w-8 h-8 animate-spin" />
             </div>
-          ) : myFeedbacks.length === 0 ? (
+          ) : filteredFeedbacks.length === 0 ? (
             <Card>
               <CardContent className="py-12 text-center text-muted-foreground">
-                Chưa có phản ánh nào được phân công cho bạn
+                {myFeedbacks.length === 0 
+                  ? "Chưa có phản ánh nào được phân công cho bạn"
+                  : "Không tìm thấy phản ánh nào phù hợp"}
               </CardContent>
             </Card>
           ) : (
-            myFeedbacks.map((feedback) => (
+            filteredFeedbacks.map((feedback) => (
               <Card key={feedback.id} data-testid={`feedback-${feedback.id}`}>
                 <CardHeader>
                   <div className="flex justify-between items-start gap-4">
