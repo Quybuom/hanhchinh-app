@@ -30,12 +30,19 @@ The system is built as a full-stack application with a clear separation of conce
   - Status update capabilities (mark as resolved, reopen)
   - Confirmation dialogs for status changes
   - Public display of staff phone numbers in feedback cards for citizen contact
+  - Staff logout redirects to home page for easy access to public view
 - **AI Notifications**: Google Gemini generates contextual Vietnamese notification messages, including tracking numbers and assignment details.
 - **Statistics & Reporting**: Real-time statistics with percentage breakdowns, assignee workload tracking, resolution rates per assignee, and CSV/text data export functionality.
 - **Staff Management System**: Full CRUD (Create, Read, Update, Delete) functionality for staff members and geographic units via an admin UI with "Cán bộ", "Địa bàn", and "Phân công" tabs. Admin can set access codes for staff members to enable individual logins. Staff phone numbers are publicly displayed to allow citizens to contact assigned staff directly.
 - **Auto-Assignment Logic**: Automatic staff assignment based on the `unitName` provided in new feedback. If a staff member is assigned to a unit, the feedback is automatically assigned to them, and its status changes to "processing". If no staff is found, the status remains "received".
-- **Public "Mark as Resolved"**: Public users can mark feedback as resolved (when in "processing" status) using the admin password for verification.
-- **Rating System**: Users can rate resolved feedback (1-5 stars) with an optional comment, after phone number verification.
+- **Resolution Comments with Images**: Staff can provide detailed resolution feedback when marking issues as resolved:
+  - Required text comment explaining the resolution
+  - Optional image upload (max 5MB) showing evidence or proof of resolution
+  - Public display of resolution comments and images in green-highlighted section
+  - Real-time UI updates - changes visible immediately without page reload
+  - Both comment and image cleared when feedback is reopened
+  - Cache invalidation ensures staff and public views stay synchronized
+- **Rating System**: Users can rate resolved feedback (1-5 stars) with an optional comment, after phone number verification. Public users can only review resolved feedback, not mark them as resolved (staff-only action).
 - **Notifications**: Telegram Bot API for real-time notifications for new feedback, assignee assignment, and status changes. Markdown escaping is applied to prevent parsing errors.
 
 **System Design Choices:**
