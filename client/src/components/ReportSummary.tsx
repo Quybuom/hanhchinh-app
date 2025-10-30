@@ -15,7 +15,7 @@ export default function ReportSummary({ feedbackItems }: ReportSummaryProps) {
 
   const stats = [
     {
-      label: "Tổng số phản ánh",
+      label: "Tổng số yêu cầu hỗ trợ",
       value: totalCount,
       icon: Inbox,
       color: "text-primary",

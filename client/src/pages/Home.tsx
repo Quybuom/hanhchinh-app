@@ -256,7 +256,7 @@ export default function Home() {
       />
 
       <main className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8 w-full flex-grow">
-        <ReportSummary feedbackItems={feedbackItems} />
+        <ReportSummary feedbackItems={filteredFeedbacks} />
         
         {/* Search and Filter Section */}
         <div className="mb-6 space-y-4">
