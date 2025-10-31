@@ -187,9 +187,9 @@ export default function StaffDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 dark:from-gray-900 dark:to-gray-800">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-slate-100 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
       {/* Header */}
-      <header className="bg-white dark:bg-gray-950 border-b shadow-sm">
+      <header className="bg-white/95 backdrop-blur-sm dark:bg-slate-900/95 border-b border-slate-200 dark:border-slate-800 shadow-sm">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
           <div>
             <h1 className="text-2xl font-bold text-primary">Bảng điều khiển cán bộ</h1>
