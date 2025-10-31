@@ -44,11 +44,11 @@ const getStatusBadgeVariant = (status: Status) => {
 const getStatusCardClass = (status: Status) => {
   switch (status) {
     case Status.Received:
-      return "bg-blue-50 dark:bg-blue-950/20 border-blue-200 dark:border-blue-900/50";
+      return "bg-blue-50/50 dark:bg-blue-950/10 border-l-4 border-l-blue-400 dark:border-l-blue-500";
     case Status.Processing:
-      return "bg-amber-50 dark:bg-amber-950/20 border-amber-200 dark:border-amber-900/50";
+      return "bg-orange-50/50 dark:bg-orange-950/10 border-l-4 border-l-orange-500 dark:border-l-orange-400";
     case Status.Resolved:
-      return "bg-green-50 dark:bg-green-950/20 border-green-200 dark:border-green-900/50";
+      return "bg-emerald-50/50 dark:bg-emerald-950/10 border-l-4 border-l-emerald-500 dark:border-l-emerald-400";
     default:
       return "";
   }
@@ -172,18 +172,18 @@ export default function FeedbackCard({
 
         {/* Resolution Comment Display */}
         {feedback.resolutionComment && feedbackStatus === Status.Resolved && (
-          <div className="pt-4 border-t-2 border-orange-200 dark:border-orange-800">
+          <div className="pt-4 border-t-2 border-emerald-200 dark:border-emerald-700">
             <div className="space-y-3">
               <div className="flex items-center gap-2">
-                <CheckCircle className="w-5 h-5 text-orange-600 dark:text-orange-500" />
+                <CheckCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
                 <span className="font-semibold text-foreground text-base">Ý kiến giải quyết:</span>
               </div>
-              <div className="bg-orange-50 dark:bg-orange-950/20 border-2 border-orange-200 dark:border-orange-900/50 rounded-lg p-4 space-y-3">
-                <p className="text-base text-orange-900 dark:text-orange-100 leading-relaxed whitespace-pre-wrap font-medium" data-testid={`feedback-resolution-${feedback.id}`}>
+              <div className="bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-950/30 dark:to-teal-950/30 border-2 border-emerald-200 dark:border-emerald-800/50 rounded-lg p-5 space-y-3 shadow-sm">
+                <p className="text-base text-emerald-900 dark:text-emerald-100 leading-relaxed whitespace-pre-wrap font-medium" data-testid={`feedback-resolution-${feedback.id}`}>
                   {feedback.resolutionComment}
                 </p>
                 {feedback.resolutionImageUrl && (
-                  <div className="rounded-md overflow-hidden border-2 border-orange-300 dark:border-orange-800">
+                  <div className="rounded-lg overflow-hidden border-2 border-emerald-300 dark:border-emerald-700 shadow-sm">
                     <img
                       src={feedback.resolutionImageUrl}
                       alt="Hình ảnh giải quyết"
