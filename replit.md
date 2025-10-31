@@ -11,12 +11,19 @@ No specific user preferences were provided in the original document.
 The system is built as a full-stack application with a clear separation of concerns.
 
 **UI/UX Decisions:**
-- **Aesthetic**: Professional Vietnamese government aesthetic with a blue primary color scheme (#3b82f6).
-- **Typography**: Clean, accessible Inter font.
-- **Responsiveness**: Designed for both mobile and desktop.
-- **Layout**: Professional card-based layout with subtle shadows and smooth transitions.
-- **Status Cards**: Color-coded feedback status cards: Blue for "Received", Amber for "Processing", Green for "Resolved".
-- **Information Display**: Structured sender, department, and assignee information with icons.
+- **Aesthetic**: Modern professional Vietnamese government aesthetic with navy-indigo primary color (HSL: 210, 64%, 34%) and warm sandstone secondary (HSL: 28, 54%, 56%).
+- **Color Palette**: 
+  - Primary: Navy-indigo for headers, primary actions, and key interactive elements
+  - Secondary: Sandstone for secondary actions and warm accents
+  - Neutrals: Slate tones (50-950) for backgrounds and borders
+  - Status Colors: Blue (chart-1) for Received, Amber (chart-4) for Processing, Emerald/Teal (chart-2) for Resolved
+- **Typography**: Clean, accessible Inter font with improved readability (text-base for content).
+- **Responsiveness**: Designed for both mobile and desktop with adaptive layouts.
+- **Layout**: Professional card-based layout with subtle left-border accents, modern slate gradients, and backdrop blur effects.
+- **Status Cards**: Color-coded feedback cards with subtle neutral backgrounds and colored left borders (4px) - Blue for "Received", Orange for "Processing", Emerald for "Resolved".
+- **Resolution Section**: Emerald gradient background with enhanced visual prominence for resolved feedback explanations.
+- **Information Display**: Structured sender, department, and assignee information with icons and inline layout for contact details.
+- **Accessibility**: Maintains >4.5:1 contrast ratio for WCAG AA compliance across light and dark modes.
 
 **Technical Implementations & Feature Specifications:**
 - **Public Feedback Submission**: Users can submit feedback with department name, title, description, contact information (name and 10-11 digit phone number), and optional images (max 5MB). Each submission receives a unique sequential tracking number.
